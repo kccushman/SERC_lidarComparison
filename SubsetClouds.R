@@ -17,8 +17,8 @@ rootDir <- "/Volumes/KC_JPL/SERC_lidar/"
   tlsCat <- catalog(tlsFile)
 
 # Define transect ends and width (in m)
-  transectP1 <- c(364550,4305790)
-  transectP2 <- c(364650,4305790)
+  transectP1 <- c(364560,4305790)
+  transectP2 <- c(364640,4305790)
   transectWidth <- 5
 
 # Subset point clouds
