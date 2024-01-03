@@ -1,6 +1,7 @@
 library("lidR")
 library("terra")
 
+#### setup ####
 rootDir <- "/Volumes/KC_JPL/SERC_lidar/"
 
 # Define file path for MLS, ALS, and drone lidar files
@@ -15,48 +16,123 @@ alsCat <- catalog(alsFile)
 droneCat <- catalog(droneFile)
 tlsCat <- catalog(tlsFile)
 
-# make terrain model
-  # use previously classified ALS data for whole area
+#### make terrain model ####
+
+# use previously classified ALS data for whole area
   alsAll <- catalog(paste0(rootDir,"als_ha4_clean.laz"))
   dtm = rasterize_terrain(alsAll, res = 1, algorithm = knnidw(k = 6L, p = 2))
 
-# Calculate voxelized point density for 5 x 5 m voxels
+#### summary stats of transects ####
   
-  rastTemplate <- rast(nrows=9, ncols = 16,
+#  Make raster template for voxelized point count/density
+  
+  # define voxel size
+  voxelSz <- 5
+  
+  # create template
+  rastTemplate <- rast(nrows=45/voxelSz, ncols = 80/voxelSz,
                        xmin=0,xmax=80,
                        ymin=0,ymax=45)
   
+  # define function to calculate PAI using MacArthur Horn method
+  MH_PAI <- function(X,Y,Z,N,type="air"){
+    
+    # combine into data frame
+    dataPoints <- data.frame(X,Y,Z,N)
+    dataPoints$XY <- paste(X,Y,sep="-")
+    dataPoints$ePAI <- NA
+    
+    # get unique X,Y columns of voxels
+    uniqueXY <- unique(dataPoints$XY)
+    
+    for(i in 1:length(uniqueXY)){
+      data_i <- dataPoints[dataPoints$XY==uniqueXY[i],]
+      
+      # order by height depending on observation type
+      if(type=="air"){
+        # "top to bottom" for airborne
+        data_i <- data_i[order(-data_i$Z),]
+      }
+      if(type=="ground"){
+        # "bottom to top" for ground
+        data_i <- data_i[order(data_i$Z),]
+      }
+      
+      for(j in 1:nrow(data_i)){
+        pulseIn <- sum(data_i$N[j:nrow(data_i)])
+        pulseOut <- sum(data_i$N[(j+1):nrow(data_i)])
+        if(j==nrow(data_i)){
+          pulseOut <- 0
+        }
+        dataPoints[dataPoints$XY==uniqueXY[i] & dataPoints$Z==data_i$Z[j],"ePAI"] <- log(pulseIn/pulseOut)
+        if(pulseIn==0|pulseOut==0){
+          dataPoints[dataPoints$XY==uniqueXY[i] & dataPoints$Z==data_i$Z[j],"ePAI"] <- 0
+        }
+      }
+      
+    }
+    
+    return(dataPoints)
+  }
   
-  # ALS
+  
+### ALS
   
     # read lidar data
     data <- readLAS(alsFile)
     # subtract ground height
     dataNorm <- normalize_height(data, dtm)
-    
+
     # 2D POINT DENSITY
+      
       # calculate voxel point density
-      voxel_als <- voxel_metrics(dataNorm, ~list(N = length(Z)), 5, all_voxels = T)
+      voxel_als <- voxel_metrics(dataNorm, ~list(N = length(Z)), voxelSz, all_voxels = T)
       # replace "NA" values with 0
       voxel_als[is.na(voxel_als$N),"N"] <- 0
       # creates 2 "layers", recombine into one
       voxel_als <- aggregate(N~X+Z, data = voxel_als, sum)
-      # scale to pts/m3
-      voxel_als$pts_m3 <- voxel_als$N/25
+      # scale to pts/m2
+      voxel_als$pts_m2 <- voxel_als$N/(voxelSz*voxelSz)
       # rescale X values
       voxel_als$Xplot <- voxel_als$X - 364560
       voxel_als$Yplot <- voxel_als$Z + 2.5
       voxel_als_vect <- vect(voxel_als,
                              geom=c("Xplot", "Yplot"))
-      densRast_als <- terra::rasterize(voxel_als_vect,rastTemplate, field="pts_m3")
+      densRast_als <- terra::rasterize(voxel_als_vect,rastTemplate, field="pts_m2")
     
     # CANOPY HEIGHT
       chm_als <- grid_canopy(dataNorm, res=1,
                              algorithm = p2r(subcircle=0.01, 
                                              na.fill = tin()))
       
-    
-    # drone
+    # Voxelized effective PAI
+      
+      # only keep first returns, and remove points < 1 m height
+      dataNormVeg <- dataNorm[dataNorm$Z>=2 & dataNorm$ReturnNumber==1,]
+      # re-calculate voxel point density
+      voxel_als_pai <- voxel_metrics(dataNormVeg, ~list(N = length(Z)), voxelSz, all_voxels = T)
+      # replace "NA" values with 0
+      voxel_als_pai[is.na(voxel_als_pai$N),"N"] <- 0
+      # creates 2 "layers", recombine into one
+      voxel_als_pai <- aggregate(N~X+Z, data = voxel_als_pai, sum)
+      # scale to pts/m3
+      voxel_als_pai[voxel_als_pai$Z>0,"pts_m3"] <- voxel_als_pai[voxel_als_pai$Z>0,"N"]/(voxelSz*voxelSz*voxelSz)
+        # account for removing points < 1 m height
+        voxel_als_pai[voxel_als_pai$Z==0,"pts_m3"] <- voxel_als_pai[voxel_als_pai$Z==0,"N"]/((voxelSz-1)*voxelSz*voxelSz)
+      # rescale X values
+        voxel_als_pai$Xplot <- voxel_als_pai$X - 364560
+        voxel_als_pai$Yplot <- voxel_als_pai$Z + 2.5
+      # Use McArthur Horn to estimate effective PAI
+        ePAI_als <- MH_PAI(X=voxel_als_pai$Xplot,
+                           Y=1,
+                           Z=voxel_als_pai$Yplot,
+                           N=voxel_als_pai$pts_m3,
+                           type="air")
+        pai_als_vect <- vect(ePAI_als,
+                               geom=c("X", "Z"))
+        paiRast_als <- terra::rasterize(pai_als_vect,rastTemplate, field="ePAI")
+      
+### Drone
       
       # read lidar data
       data <- readLAS(droneFile)
@@ -84,7 +160,35 @@ tlsCat <- catalog(tlsFile)
                              algorithm = p2r(subcircle=0.01, 
                                              na.fill = tin()))
       
-    # MLS
+      # Voxelized effective PAI
+      
+        # only keep first returns, and remove points < 1 m height
+        dataNormVeg <- dataNorm[dataNorm$Z>=2 & dataNorm$ReturnNumber==1,]
+        # re-calculate voxel point density
+        voxel_drone_pai <- voxel_metrics(dataNormVeg, ~list(N = length(Z)), voxelSz, all_voxels = T)
+        # replace "NA" values with 0
+        voxel_drone_pai[is.na(voxel_drone_pai$N),"N"] <- 0
+        # creates 2 "layers", recombine into one
+        voxel_drone_pai <- aggregate(N~X+Z, data = voxel_drone_pai, sum)
+        # scale to pts/m3
+        voxel_drone_pai[voxel_drone_pai$Z>0,"pts_m3"] <- voxel_drone_pai[voxel_drone_pai$Z>0,"N"]/(voxelSz*voxelSz*voxelSz)
+        # account for removing points < 1 m height
+        voxel_drone_pai[voxel_drone_pai$Z==0,"pts_m3"] <- voxel_drone_pai[voxel_drone_pai$Z==0,"N"]/((voxelSz-1)*voxelSz*voxelSz)
+        # rescale X values
+        voxel_drone_pai$Xplot <- voxel_drone_pai$X - 364560
+        voxel_drone_pai$Yplot <- voxel_drone_pai$Z + 2.5
+        # Use McArthur Horn to estimate effective PAI
+        ePAI_drone <- MH_PAI(X=voxel_drone_pai$Xplot,
+                           Y=1,
+                           Z=voxel_drone_pai$Yplot,
+                           N=voxel_drone_pai$pts_m3,
+                           type="air")
+        pai_drone_vect <- vect(ePAI_drone,
+                             geom=c("X", "Z"))
+        paiRast_drone <- terra::rasterize(pai_drone_vect,rastTemplate, field="ePAI")
+      
+
+### MLS
       
       # read lidar data
       data <- readLAS(mlsFile)
@@ -112,7 +216,35 @@ tlsCat <- catalog(tlsFile)
                              algorithm = p2r(subcircle=0.01, 
                                              na.fill = tin()))
       
-  # TLS
+    # Voxelized effective PAI
+      
+      # only keep first returns, and remove points < 1 m height
+      dataNormVeg <- dataNorm[dataNorm$Z>=2 & dataNorm$ReturnNumber==1,]
+      # re-calculate voxel point density
+      voxel_mls_pai <- voxel_metrics(dataNormVeg, ~list(N = length(Z)), voxelSz, all_voxels = T)
+      # replace "NA" values with 0
+      voxel_mls_pai[is.na(voxel_mls_pai$N),"N"] <- 0
+      # creates 2 "layers", recombine into one
+      voxel_mls_pai <- aggregate(N~X+Z, data = voxel_mls_pai, sum)
+      # scale to pts/m3
+      voxel_mls_pai[voxel_mls_pai$Z>0,"pts_m3"] <- voxel_mls_pai[voxel_mls_pai$Z>0,"N"]/(voxelSz*voxelSz*voxelSz)
+      # account for removing points < 1 m height
+      voxel_mls_pai[voxel_mls_pai$Z==0,"pts_m3"] <- voxel_mls_pai[voxel_mls_pai$Z==0,"N"]/((voxelSz-1)*voxelSz*voxelSz)
+      # rescale X values
+      voxel_mls_pai$Xplot <- voxel_mls_pai$X - 364560
+      voxel_mls_pai$Yplot <- voxel_mls_pai$Z + 2.5
+      # Use McArthur Horn to estimate effective PAI
+      ePAI_mls <- MH_PAI(X=voxel_mls_pai$Xplot,
+                         Y=1,
+                         Z=voxel_mls_pai$Yplot,
+                         N=voxel_mls_pai$pts_m3,
+                         type="ground")
+      pai_mls_vect <- vect(ePAI_mls,
+                           geom=c("X", "Z"))
+      paiRast_mls <- terra::rasterize(pai_mls_vect,rastTemplate, field="ePAI")    
+      
+      
+### TLS
       
       # read lidar data
       data <- readLAS(tlsFile)
@@ -140,12 +272,38 @@ tlsCat <- catalog(tlsFile)
                              algorithm = p2r(subcircle=0.01, 
                                              na.fill = tin()))
       
+    # Voxelized effective PAI
       
-#### plots ####
+      # only keep first returns, and remove points < 2 m height
+      dataNormVeg <- dataNorm[dataNorm$Z>=2 & dataNorm$ReturnNumber==1,]
+      # re-calculate voxel point density
+      voxel_tls_pai <- voxel_metrics(dataNormVeg, ~list(N = length(Z)), voxelSz, all_voxels = T)
+      # replace "NA" values with 0
+      voxel_tls_pai[is.na(voxel_tls_pai$N),"N"] <- 0
+      # creates 2 "layers", recombine into one
+      voxel_tls_pai <- aggregate(N~X+Z, data = voxel_tls_pai, sum)
+      # scale to pts/m3
+      voxel_tls_pai[voxel_tls_pai$Z>0,"pts_m3"] <- voxel_tls_pai[voxel_tls_pai$Z>0,"N"]/(voxelSz*voxelSz*voxelSz)
+      # account for removing points < 1 m height
+      voxel_tls_pai[voxel_tls_pai$Z==0,"pts_m3"] <- voxel_tls_pai[voxel_tls_pai$Z==0,"N"]/((voxelSz-1)*voxelSz*voxelSz)
+      # rescale X values
+      voxel_tls_pai$Xplot <- voxel_tls_pai$X - 364560
+      voxel_tls_pai$Yplot <- voxel_tls_pai$Z + 2.5
+      # Use McArthur Horn to estimate effective PAI
+      ePAI_tls <- MH_PAI(X=voxel_tls_pai$Xplot,
+                         Y=1,
+                         Z=voxel_tls_pai$Yplot,
+                         N=voxel_tls_pai$pts_m3,
+                         type="ground")
+      pai_tls_vect <- vect(ePAI_tls,
+                           geom=c("X", "Z"))
+      paiRast_tls <- terra::rasterize(pai_tls_vect,rastTemplate, field="ePAI")
+      
+#### Point cloud plots ####
 
       
       
-jpeg(filename = "TestPlot.jpeg",
+jpeg(filename = "PointCloudPlot.jpeg",
      width = 1200, height = 3000, units = "px", pointsize = 36,
      quality = 300)
 
@@ -211,7 +369,7 @@ jpeg(filename = "TestPlot.jpeg",
     axis(side=1,at=seq(0,80,5),pos=-1)
     
     mtext("Ground distance (m)",side=1,line=0,outer=T)
-    mtext("Height (m)",side=2,line=0,outer=T)
+    mtext("Height (m)",side=2,line=0,outer=T,las=0)
     
     
 dev.off()  
@@ -226,3 +384,89 @@ dev.off()
        cex=0.1,
        pch=19,
        main = "Drone lidar")
+  
+#### Rasterized metric plots ####
+  
+  densRange <- range(values(densRast_als),
+                     values(densRast_drone),
+                     values(densRast_mls),
+                     values(densRast_tls))
+  densBreaks <- c(0,1e-8,10,20,40,80,160,320,640,1000,10000,densRange[2])
+  paiRange <- range(values(paiRast_als),
+                     values(paiRast_drone),
+                     values(paiRast_mls),
+                     values(paiRast_tls))
+  paiBreaks <- c(0,1e-8,0.25,0.5,1:5,paiRange[2])
+  
+  # jpeg(filename = "VoxelMetricsPlot.jpeg",
+  #      width = 2400, height = 3000, units = "px", pointsize = 36,
+  #      quality = 300)
+  
+  par(mfrow=c(4,2),las=1)
+  
+  terra::plot(densRast_als,
+       breaks= densBreaks,
+       col = c("white",viridisLite::plasma(length(densBreaks)-2)),
+       decreasing=F,
+       box=F,
+       las=1,
+       axes=F,
+       legend=F,
+       main = "Point density (points/m3)")
+  terra::plot(paiRast_als,
+              breaks= paiBreaks,
+              col = c("white",viridisLite::viridis(length(paiBreaks)-2)),
+              decreasing=F,
+              box=F,
+              las=1,
+              axes=F,
+              legend=F,
+              main = "Effective PAI (m2/m2)")
+  terra::plot(densRast_drone,
+              breaks= densBreaks,
+              col = c("white",viridisLite::plasma(length(densBreaks)-2)),
+              decreasing=F,
+              box=F,
+              las=1,
+              axes=F,
+              legend=F)
+  terra::plot(paiRast_drone,
+              breaks= paiBreaks,
+              col = c("white",viridisLite::viridis(length(paiBreaks)-2)),
+              decreasing=F,
+              box=F,
+              las=1,
+              axes=F,
+              legend=F)
+  terra::plot(densRast_mls,
+              breaks= densBreaks,
+              col = c("white",viridisLite::plasma(length(densBreaks)-2)),
+              decreasing=F,
+              box=F,
+              las=1,
+              axes=F,
+              legend=F)
+  terra::plot(paiRast_mls,
+              breaks= paiBreaks,
+              col = c("white",viridisLite::viridis(length(paiBreaks)-2)),
+              decreasing=F,
+              box=F,
+              las=1,
+              axes=F,
+              legend=F)
+  terra::plot(densRast_tls,
+              breaks= densBreaks,
+              col = c("white",viridisLite::plasma(length(densBreaks)-2)),
+              decreasing=F,
+              box=F,
+              las=1,
+              axes=F,
+              legend=F)
+  terra::plot(paiRast_tls,
+              breaks= paiBreaks,
+              col = c("white",viridisLite::viridis(length(paiBreaks)-2)),
+              decreasing=F,
+              box=F,
+              las=1,
+              axes=F,
+              legend=F) 
