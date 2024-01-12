@@ -91,8 +91,8 @@ tlsCat <- catalog(tlsFile)
       voxel_als[is.na(voxel_als$N),"N"] <- 0
       # creates 2 "layers", recombine into one
       voxel_als <- aggregate(N~X+Z, data = voxel_als, sum)
-      # scale to pts/m2
-      voxel_als$pts_m2 <- voxel_als$N/(voxelSz*voxelSz)
+      # scale to pts/m3
+      voxel_als$pts_m3 <- voxel_als$N/(voxelSz^3)
       # rescale X values
       voxel_als$Xplot <- voxel_als$X - 364560
       voxel_als$Yplot <- voxel_als$Z + 2.5
@@ -350,7 +350,7 @@ jpeg(filename = "PointCloudPlot.jpeg",
          ylab=NA,
          asp=1,
          axes=F)
-    mtext("Mobile laser scanning",side=3,line=-3,outer=F)
+    mtext("Mobile lidar",side=3,line=-3,outer=F)
     axis(side=2,at=seq(0,45,5),pos=-1)
     
     #TLS   
@@ -374,16 +374,6 @@ jpeg(filename = "PointCloudPlot.jpeg",
     
 dev.off()  
   
-  plot(densRast_als)
-  
-  
-  
-  #Drone      
-  data <- readLAS(droneFile)   
-  plot(x=data$X,y=data$Z,
-       cex=0.1,
-       pch=19,
-       main = "Drone lidar")
   
 #### Rasterized metric plots ####
   
@@ -391,18 +381,19 @@ dev.off()
                      values(densRast_drone),
                      values(densRast_mls),
                      values(densRast_tls))
-  densBreaks <- c(0,1e-8,10,20,40,80,160,320,640,1000,10000,densRange[2])
+  densBreaks <- c(0,1e-8,1,10,20,40,80,160,320,640,1000,10000,densRange[2])
   paiRange <- range(values(paiRast_als),
                      values(paiRast_drone),
                      values(paiRast_mls),
                      values(paiRast_tls))
   paiBreaks <- c(0,1e-8,0.25,0.5,1:5,paiRange[2])
+  cexLab <- 1.2
   
-  # jpeg(filename = "VoxelMetricsPlot.jpeg",
-  #      width = 2400, height = 3000, units = "px", pointsize = 36,
-  #      quality = 300)
+jpeg(filename = "VoxelMetricsPlot.jpeg",
+     width = 2400, height = 3000, units = "px", pointsize = 36,
+     quality = 300)
   
-  par(mfrow=c(4,2),las=1)
+  par(mfrow=c(4,2),las=1, mar=c(2,2,1,1), oma=c(4,4,10,1), xpd=T)
   
   terra::plot(densRast_als,
        breaks= densBreaks,
@@ -411,8 +402,20 @@ dev.off()
        box=F,
        las=1,
        axes=F,
-       legend=F,
-       main = "Point density (points/m3)")
+       legend=F)
+  axis(side=1, at=seq(0,80,5), pos=0,
+       labels=F)
+  axis(side=2, at=seq(0,45,5), pos=0,
+       labels=T)
+  legend(x = -10, y = 60, bty="n",
+         c("0", "0 - 1", "1 - 10", "10 - 20","20 - 40","40 - 80",
+           "80 - 160","160 - 320","320 - 640","640 - 1,000","1,000 - 10,000", "> 10,000"),
+         x.intersp = 0.2,
+         fill = c("white",viridisLite::plasma(length(densBreaks)-2)),
+         xpd=NA,ncol=4,
+         cex=1.5)
+  mtext("Point density (points/m3)",side=3,line=8,outer=F, cex = cexLab)
+  mtext("Airborne lidar",side=2,line=1,outer=F, las=0)
   terra::plot(paiRast_als,
               breaks= paiBreaks,
               col = c("white",viridisLite::viridis(length(paiBreaks)-2)),
@@ -420,8 +423,20 @@ dev.off()
               box=F,
               las=1,
               axes=F,
-              legend=F,
-              main = "Effective PAI (m2/m2)")
+              legend=F)
+  axis(side=1, at=seq(0,80,5), pos=0,
+       labels=F)
+  axis(side=2, at=seq(0,45,5), pos=0,
+       labels=F)
+  legend(x = 0, y = 60, bty="n",
+         c("0", "0 - 0.25", "0.25 - 0.5", "0.5 - 1","1 - 2","2 - 3",
+           "3 - 4","4 - 5",">5"),
+         x.intersp = 0.2,
+         fill = c("white",viridisLite::viridis(length(paiBreaks)-2)),
+         xpd=NA,ncol=4,
+         cex=1.5)
+  mtext("Effective PAI (m2/m2)",side=3,line=8,outer=F, cex = cexLab)
+  
   terra::plot(densRast_drone,
               breaks= densBreaks,
               col = c("white",viridisLite::plasma(length(densBreaks)-2)),
@@ -430,6 +445,11 @@ dev.off()
               las=1,
               axes=F,
               legend=F)
+  axis(side=1, at=seq(0,80,5), pos=0,
+       labels=F)
+  axis(side=2, at=seq(0,45,5), pos=0,
+       labels=T)
+  mtext("Drone lidar",side=2,line=1,outer=F, las=0)
   terra::plot(paiRast_drone,
               breaks= paiBreaks,
               col = c("white",viridisLite::viridis(length(paiBreaks)-2)),
@@ -438,6 +458,11 @@ dev.off()
               las=1,
               axes=F,
               legend=F)
+  axis(side=1, at=seq(0,80,5), pos=0,
+       labels=F)
+  axis(side=2, at=seq(0,45,5), pos=0,
+       labels=F)
+  
   terra::plot(densRast_mls,
               breaks= densBreaks,
               col = c("white",viridisLite::plasma(length(densBreaks)-2)),
@@ -446,6 +471,11 @@ dev.off()
               las=1,
               axes=F,
               legend=F)
+  axis(side=1, at=seq(0,80,5), pos=0,
+       labels=F)
+  axis(side=2, at=seq(0,45,5), pos=0,
+       labels=T)
+  mtext("Mobile lidar",side=2,line=1,outer=F, las=0)
   terra::plot(paiRast_mls,
               breaks= paiBreaks,
               col = c("white",viridisLite::viridis(length(paiBreaks)-2)),
@@ -454,6 +484,11 @@ dev.off()
               las=1,
               axes=F,
               legend=F)
+  axis(side=1, at=seq(0,80,5), pos=0,
+       labels=F)
+  axis(side=2, at=seq(0,45,5), pos=0,
+       labels=F)
+  
   terra::plot(densRast_tls,
               breaks= densBreaks,
               col = c("white",viridisLite::plasma(length(densBreaks)-2)),
@@ -462,6 +497,12 @@ dev.off()
               las=1,
               axes=F,
               legend=F)
+  axis(side=1, at=seq(0,80,5), pos=0,
+       labels=T)
+  axis(side=2, at=seq(0,45,5), pos=0,
+       labels=T)
+  mtext("Terrestrial lidar",side=2,line=1,outer=F, las=0)
+
   terra::plot(paiRast_tls,
               breaks= paiBreaks,
               col = c("white",viridisLite::viridis(length(paiBreaks)-2)),
@@ -469,4 +510,13 @@ dev.off()
               box=F,
               las=1,
               axes=F,
-              legend=F) 
+              legend=F)
+  axis(side=1, at=seq(0,80,5), pos=0,
+       labels=T)
+  axis(side=2, at=seq(0,45,5), pos=0,
+       labels=F)
+  mtext("Ground distance (m)",side=1,line=1,outer=T, cex = cexLab)
+  mtext("Height (m)",side=2,line=1,outer=T,las=0, cex = cexLab)
+  
+dev.off()  
+  
