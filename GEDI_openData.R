@@ -1,16 +1,21 @@
 library(rhdf5)
 library(bit64)
 library(sp)
-library(rgdal)
+library(terra)
+
+# set working directory
+setwd("/Volumes/KC_JPL/SERC_lidar/GEDI/")
 
 # Get 2_A data
-files <- unlist(list.files(path="./data_GEDI2A/", pattern="h5", recursive=T, full.names=T))
+files <- unlist(list.files(path="./GEDI02_A", pattern="h5", recursive=T, full.names=T))
 roots <- unlist(strsplit(unlist(lapply(strsplit(files, "/"), function(x) x[5])),".h5"))
 
 temp_i <- vector("list", length(files))
 
 for (i in 1:length(files)){
 
+   year <- as.integer(substr(files[i],42,45))
+  
    temp <- h5ls(files[i])
    temp <- temp[which(temp$dim != "1"),]
    temp <- temp[-which(temp$dim==""),]
@@ -33,6 +38,8 @@ for (i in 1:length(files)){
          
          sensitivity = as.numeric(h5read(fn, paste("/",beams[j],"/sensitivity",sep=""))),
 
+         quality_flag = as.numeric(h5read(fn, paste("/",beams[j],"/quality_flag",sep=""))),
+         
          shot_number = as.character(h5read(fn, paste("/",beams[j],"/shot_number",sep=""), bit64conversion="bit64")),
 
          solar_azimuth = as.numeric(h5read(fn, paste("/",beams[j],"/solar_azimuth",sep=""))),
@@ -72,6 +79,9 @@ for (i in 1:length(files)){
    }
 
    temp_j <- do.call(rbind, temp_j)
+   if(nrow(temp_j>0)){
+     temp_j$year <- year
+   }
    temp_i[[i]] <- temp_j
 
 }
@@ -80,13 +90,15 @@ temp_i <- do.call(rbind, temp_i)
 write.csv(temp_i, "data_GEDI2_A.csv", row.names = F)
 
 # Get 2_B data (right now, just pulls useful metadata, vertical PAI profiles, and vertical PAVD profiles)
-files <- unlist(list.files(path="./data_GEDI2B/", pattern="h5", recursive=T, full.names=T))
+files <- unlist(list.files(path="./GEDI02_B", pattern="h5", recursive=T, full.names=T))
 roots <- unlist(strsplit(unlist(lapply(strsplit(files, "/"), function(x) x[5])),".h5"))
 
 temp_i <- vector("list", length(files))
 
 for (i in 1:length(files)){
-   
+  
+   year <- as.integer(substr(files[i],42,45))
+  
    temp <- h5ls(files[i])
    temp <- temp[which(temp$dim != "1"),]
    temp <- temp[-which(temp$dim==""),]
@@ -156,6 +168,9 @@ for (i in 1:length(files)){
    }
    
    temp_j <- do.call(rbind, temp_j)
+   if(nrow(temp_j>0)){
+     temp_j$year <- year
+   }
    temp_i[[i]] <- temp_j
    
 }
