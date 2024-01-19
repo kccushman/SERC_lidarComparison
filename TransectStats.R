@@ -5,10 +5,10 @@ library("terra")
 rootDir <- "/Volumes/KC_JPL/SERC_lidar/"
 
 # Define file path for MLS, ALS, and drone lidar files
-mlsFile <- paste0(rootDir,"transect_mls.laz")
-alsFile <- paste0(rootDir,"transect_als.laz")
-droneFile <- paste0(rootDir,"transect_drone.laz")
-tlsFile <- paste0(rootDir,"transect_tls.laz")
+mlsFile <- paste0(rootDir,"transect/transect_mls.laz")
+alsFile <- paste0(rootDir,"transect/transect_als.laz")
+droneFile <- paste0(rootDir,"transect/transect_drone.laz")
+tlsFile <- paste0(rootDir,"transect/transect_tls.laz")
 
 # Make lidR catalog objects
 mlsCat <- catalog(mlsFile)
@@ -19,10 +19,10 @@ tlsCat <- catalog(tlsFile)
 #### make terrain model ####
 
 # use previously classified ALS data for whole area
-  alsAll <- catalog(paste0(rootDir,"als_ha4_clean.laz"))
+  alsAll <- catalog(paste0(rootDir,"ha4/als_ha4_clean.laz"))
   dtm = rasterize_terrain(alsAll, res = 1, algorithm = knnidw(k = 6L, p = 2))
 
-#### summary stats of transects ####
+#### Calculate summary stats of transects ####
   
 #  Make raster template for voxelized point count/density
   
@@ -98,17 +98,16 @@ tlsCat <- catalog(tlsFile)
       voxel_als$Yplot <- voxel_als$Z + 2.5
       voxel_als_vect <- vect(voxel_als,
                              geom=c("Xplot", "Yplot"))
-      densRast_als <- terra::rasterize(voxel_als_vect,rastTemplate, field="pts_m2")
+      densRast_als <- terra::rasterize(voxel_als_vect,rastTemplate, field="pts_m3")
     
     # CANOPY HEIGHT
-      chm_als <- grid_canopy(dataNorm, res=1,
-                             algorithm = p2r(subcircle=0.01, 
-                                             na.fill = tin()))
+      chm_als <- rasterize_canopy(dataNorm, res=0.25,
+                             algorithm = p2r(subcircle=0.01))
       
     # Voxelized effective PAI
       
-      # only keep first returns, and remove points < 1 m height
-      dataNormVeg <- dataNorm[dataNorm$Z>=2 & dataNorm$ReturnNumber==1,]
+      # only keep first returns, and remove points < 2 m height
+      dataNormVeg <- dataNorm[dataNorm$Z>=1 & dataNorm$ReturnNumber==1,]
       # re-calculate voxel point density
       voxel_als_pai <- voxel_metrics(dataNormVeg, ~list(N = length(Z)), voxelSz, all_voxels = T)
       # replace "NA" values with 0
@@ -156,14 +155,13 @@ tlsCat <- catalog(tlsFile)
       densRast_drone <- terra::rasterize(voxel_drone_vect,rastTemplate, field="pts_m3")
       
       # CANOPY HEIGHT
-      chm_drone <- grid_canopy(dataNorm, res=1,
-                             algorithm = p2r(subcircle=0.01, 
-                                             na.fill = tin()))
+      chm_drone <- rasterize_canopy(dataNorm, res=0.25,
+                             algorithm = p2r(subcircle=0.01))
       
       # Voxelized effective PAI
       
         # only keep first returns, and remove points < 1 m height
-        dataNormVeg <- dataNorm[dataNorm$Z>=2 & dataNorm$ReturnNumber==1,]
+        dataNormVeg <- dataNorm[dataNorm$Z>=1 & dataNorm$ReturnNumber==1,]
         # re-calculate voxel point density
         voxel_drone_pai <- voxel_metrics(dataNormVeg, ~list(N = length(Z)), voxelSz, all_voxels = T)
         # replace "NA" values with 0
@@ -212,14 +210,13 @@ tlsCat <- catalog(tlsFile)
       densRast_mls <- terra::rasterize(voxel_mls_vect,rastTemplate, field="pts_m3")
       
       # CANOPY HEIGHT
-      chm_mls <- grid_canopy(dataNorm, res=1,
-                             algorithm = p2r(subcircle=0.01, 
-                                             na.fill = tin()))
+      chm_mls <- rasterize_canopy(dataNorm, res=0.25,
+                             algorithm = p2r(subcircle=0.01))
       
     # Voxelized effective PAI
       
       # only keep first returns, and remove points < 1 m height
-      dataNormVeg <- dataNorm[dataNorm$Z>=2 & dataNorm$ReturnNumber==1,]
+      dataNormVeg <- dataNorm[dataNorm$Z>=1 & dataNorm$ReturnNumber==1,]
       # re-calculate voxel point density
       voxel_mls_pai <- voxel_metrics(dataNormVeg, ~list(N = length(Z)), voxelSz, all_voxels = T)
       # replace "NA" values with 0
@@ -268,14 +265,13 @@ tlsCat <- catalog(tlsFile)
       densRast_tls <- terra::rasterize(voxel_tls_vect,rastTemplate, field="pts_m3")
       
       # CANOPY HEIGHT
-      chm_tls <- grid_canopy(dataNorm, res=1,
-                             algorithm = p2r(subcircle=0.01, 
-                                             na.fill = tin()))
+      chm_tls <- rasterize_canopy(dataNorm, res=0.25,
+                             algorithm = p2r(subcircle=0.01))
       
     # Voxelized effective PAI
       
       # only keep first returns, and remove points < 2 m height
-      dataNormVeg <- dataNorm[dataNorm$Z>=2 & dataNorm$ReturnNumber==1,]
+      dataNormVeg <- dataNorm[dataNorm$Z>=1 & dataNorm$ReturnNumber==1,]
       # re-calculate voxel point density
       voxel_tls_pai <- voxel_metrics(dataNormVeg, ~list(N = length(Z)), voxelSz, all_voxels = T)
       # replace "NA" values with 0
@@ -299,15 +295,59 @@ tlsCat <- catalog(tlsFile)
                            geom=c("X", "Z"))
       paiRast_tls <- terra::rasterize(pai_tls_vect,rastTemplate, field="ePAI")
       
-#### Point cloud plots ####
+#### Make table of summary stats ####
+      
+  transectSummary <- data.frame(instrument = c("Airplane lidar",
+                                               "Drone lidar",
+                                               "Mobile lidar",
+                                               "Terrestrial lidar"),
+                                pointDensity = NA,
+                                meanCanopyHeight = NA,
+                                canopyRugosity = NA, # calculated a la https://www.sciencedirect.com/science/article/abs/pii/S0378112713001254?via%3Dihub
+                                meanLAI = NA)
 
+  # Airplane
+      transectSummary$pointDensity[1] <- round(alsCat$Number.of.point.records/(80*5))
+      transectSummary$meanCanopyHeight[1] <- round(mean(values(chm_als),na.rm=T),1)
+      transectSummary$canopyRugosity[1] <- round(sd(aggregate(ePAI_als$ePAI, by=list(ePAI_als$X), FUN="sd")[,2]),2)
+      transectSummary$meanLAI[1] <- round(mean(aggregate(ePAI_als$ePAI, by=list(ePAI_als$X), FUN="sum")[,2]),2)
+     
+  # Drone
+      transectSummary$pointDensity[2] <- round(droneCat$Number.of.point.records/(80*5))
+      transectSummary$meanCanopyHeight[2] <- round(mean(values(chm_drone),na.rm=T),1)
+      transectSummary$canopyRugosity[2] <- round(sd(aggregate(ePAI_drone$ePAI, by=list(ePAI_drone$X), FUN="sd")[,2]),2)
+      transectSummary$meanLAI[2] <- round(mean(aggregate(ePAI_drone$ePAI, by=list(ePAI_drone$X), FUN="sum")[,2]),2)
+   
+  # Mobile
+      transectSummary$pointDensity[3] <- round(mlsCat$Number.of.point.records/(80*5))
+      transectSummary$meanCanopyHeight[3] <- round(mean(values(chm_mls),na.rm=T),1)
+      transectSummary$canopyRugosity[3] <- round(sd(aggregate(ePAI_mls$ePAI, by=list(ePAI_mls$X), FUN="sd")[,2]),2)
+      transectSummary$meanLAI[3] <- round(mean(aggregate(ePAI_mls$ePAI, by=list(ePAI_mls$X), FUN="sum")[,2]),2)
       
+  # TLS
+      transectSummary$pointDensity[4] <- round(tlsCat$Number.of.point.records/(80*5))
+      transectSummary$meanCanopyHeight[4] <- round(mean(values(chm_tls),na.rm=T),1)
+      transectSummary$canopyRugosity[4] <- round(sd(aggregate(ePAI_tls$ePAI, by=list(ePAI_tls$X), FUN="sd")[,2]),2)
+      transectSummary$meanLAI[4] <- round(mean(aggregate(ePAI_tls$ePAI, by=list(ePAI_tls$X), FUN="sum")[,2]),2)
       
+      write.csv(transectSummary,"transectSummaryStats.csv",row.names = F)
+      
+     # calculate % variation in mean canopy height
+     round(100*(max(transectSummary$meanCanopyHeight)-min(transectSummary$meanCanopyHeight))/min(transectSummary$meanCanopyHeight),1)
+      
+     # calculate % variation in canopy rugosity
+     round(100*(max(transectSummary$canopyRugosity)-min(transectSummary$canopyRugosity))/min(transectSummary$canopyRugosity),1)
+     
+     # calculate % variation in mean LAI
+     round(100*(max(transectSummary$meanLAI)-min(transectSummary$meanLAI))/min(transectSummary$meanLAI),1)
+      
+#### Point cloud plots ####
+     
 jpeg(filename = "PointCloudPlot.jpeg",
-     width = 1200, height = 3000, units = "px", pointsize = 36,
+     width = 1800, height = 1200, units = "px", pointsize = 36,
      quality = 300)
 
-  par(mfrow=c(4,1), oma=c(2,2,1,0), las=1, mar=c(3,4,1,1))
+  par(mfrow=c(2,2), oma=c(4,4,1,1), las=1, mar=c(1,1,1,0))
   ptCex <- 0.05      
   
     #ALS      
@@ -321,7 +361,7 @@ jpeg(filename = "PointCloudPlot.jpeg",
            ylab=NA,
            asp=1,
            axes=F)
-      mtext("Airborne lidar",side=3,line=-3,outer=F)
+      mtext("Airborne lidar",side=3,line=-1,outer=F)
       axis(side=2,at=seq(0,45,5),pos=-1)
       
     
@@ -336,9 +376,8 @@ jpeg(filename = "PointCloudPlot.jpeg",
          ylab=NA,
          asp=1,
          axes=F)
-    mtext("Drone lidar",side=3,line=-3,outer=F)
-    axis(side=2,at=seq(0,45,5),pos=-1)
-    
+    mtext("Drone lidar",side=3,line=-1,outer=F)
+
     #MLS   
     data <- readLAS(mlsFile)   
     dataNorm <- normalize_height(data, dtm)
@@ -350,8 +389,9 @@ jpeg(filename = "PointCloudPlot.jpeg",
          ylab=NA,
          asp=1,
          axes=F)
-    mtext("Mobile lidar",side=3,line=-3,outer=F)
+    mtext("Mobile lidar",side=3,line=-1,outer=F)
     axis(side=2,at=seq(0,45,5),pos=-1)
+    axis(side=1,at=seq(0,80,5),pos=-1)
     
     #TLS   
     data <- readLAS(tlsFile)   
@@ -364,17 +404,75 @@ jpeg(filename = "PointCloudPlot.jpeg",
          ylab=NA,
          asp=1,
          axes=F)
-    mtext("Terrestrial lidar",side=3,line=-3,outer=F)
-    axis(side=2,at=seq(0,45,5),pos=-1)
+    mtext("Terrestrial lidar",side=3,line=-1,outer=F)
     axis(side=1,at=seq(0,80,5),pos=-1)
     
-    mtext("Ground distance (m)",side=1,line=0,outer=T)
-    mtext("Height (m)",side=2,line=0,outer=T,las=0)
+    mtext("Ground distance (m)",side=1,line=1,outer=T)
+    mtext("Height (m)",side=2,line=1,outer=T,las=0)
     
     
 dev.off()  
   
   
+#### Trunk cross section plots ####
+
+trunkDrone <- readLAS("trunk/trunk_drone.laz")
+trunkMLS <- readLAS("trunk/trunk_mls.laz")
+trunkTLS <- readLAS("trunk/trunk_tls.laz")
+
+
+zMin <- 7.97
+zMax <- 8.00
+xRange <- c(364623.6,364624.7)
+yRange <- c(4305790.9,4305791.6)
+ptCex <- 0.4
+
+jpeg(filename = "TrunkPlot.jpeg",
+     width = 1200, height = 500, units = "px", pointsize = 36,
+     quality = 300)
+
+  par(mfrow=c(1,3), mar=c(1,1,1,1),oma=c(2,2,2,2))
+  
+  plot(x = trunkDrone$X[trunkDrone$Z>zMin & trunkDrone$Z<zMax],
+       y = trunkDrone$Y[trunkDrone$Z>zMin & trunkDrone$Z<zMax],
+       pch=19,
+       xlim=xRange,
+       ylim=yRange,
+       cex=ptCex,
+       axes=F,ylab=NA,xlab=NA,
+       col = adjustcolor("black",0.5),
+       asp=1)
+  mtext("Drone lidar",side=3,line=-1,outer=F)
+  
+  plot(x = trunkMLS$X[trunkMLS$Z>zMin & trunkMLS$Z<zMax],
+       y = trunkMLS$Y[trunkMLS$Z>zMin & trunkMLS$Z<zMax],
+       pch=19,
+       xlim=xRange,
+       ylim=yRange,
+       cex=ptCex,
+       axes=F,ylab=NA,xlab=NA,
+       col = adjustcolor("black",0.5),
+       asp=1)
+  mtext("Mobile lidar",side=3,line=-1,outer=F)
+  
+  plot(x = trunkTLS$X[trunkTLS$Z>zMin & trunkTLS$Z<zMax],
+       y = trunkTLS$Y[trunkTLS$Z>zMin & trunkTLS$Z<zMax],
+       pch=19,
+       xlim=xRange,
+       ylim=yRange,
+       cex=ptCex,
+       axes=F,ylab=NA,xlab=NA,
+       col = adjustcolor("black",0.5),
+       asp=1)
+  mtext("Terrestrial lidar",side=3,line=-1,outer=F)
+  lines(x=c(364623.6,364623.8),
+        y=c(4305790.9,4305790.9),
+        lwd=2)
+  text(" 20 cm", x=364623.6,y=4305790.95, adj=0)
+
+dev.off()
+
+
 #### Rasterized metric plots ####
   
   densRange <- range(values(densRast_als),
@@ -408,7 +506,7 @@ jpeg(filename = "VoxelMetricsPlot.jpeg",
   axis(side=2, at=seq(0,45,5), pos=0,
        labels=T)
   legend(x = -10, y = 60, bty="n",
-         c("0", "0 - 1", "1 - 10", "10 - 20","20 - 40","40 - 80",
+         c("0", "< 1", "1 - 10", "10 - 20","20 - 40","40 - 80",
            "80 - 160","160 - 320","320 - 640","640 - 1,000","1,000 - 10,000", "> 10,000"),
          x.intersp = 0.2,
          fill = c("white",viridisLite::plasma(length(densBreaks)-2)),
@@ -429,7 +527,7 @@ jpeg(filename = "VoxelMetricsPlot.jpeg",
   axis(side=2, at=seq(0,45,5), pos=0,
        labels=F)
   legend(x = 0, y = 60, bty="n",
-         c("0", "0 - 0.25", "0.25 - 0.5", "0.5 - 1","1 - 2","2 - 3",
+         c("0", "< 0.25", "0.25 - 0.5", "0.5 - 1","1 - 2","2 - 3",
            "3 - 4","4 - 5",">5"),
          x.intersp = 0.2,
          fill = c("white",viridisLite::viridis(length(paiBreaks)-2)),

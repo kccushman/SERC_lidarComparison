@@ -6,9 +6,8 @@ library(terra)
 # set working directory
 setwd("/Volumes/KC_JPL/SERC_lidar/GEDI/")
 
-# Get 2_A data
+#### Get 2_A data ####
 files <- unlist(list.files(path="./GEDI02_A", pattern="h5", recursive=T, full.names=T))
-roots <- unlist(strsplit(unlist(lapply(strsplit(files, "/"), function(x) x[5])),".h5"))
 
 temp_i <- vector("list", length(files))
 
@@ -35,6 +34,8 @@ for (i in 1:length(files)){
          lat_lowestmode = as.numeric(h5read(fn, paste("/",beams[j],"/lat_lowestmode",sep=""))),
 
          lon_lowestmode = as.numeric(h5read(fn, paste("/",beams[j],"/lon_lowestmode",sep=""))),
+         
+         elev_lowestmode = as.numeric(h5read(fn, paste("/",beams[j],"/elev_lowestmode",sep=""))),
          
          sensitivity = as.numeric(h5read(fn, paste("/",beams[j],"/sensitivity",sep=""))),
 
@@ -87,11 +88,11 @@ for (i in 1:length(files)){
 }
 
 temp_i <- do.call(rbind, temp_i)
-write.csv(temp_i, "data_GEDI2_A.csv", row.names = F)
+write.csv(temp_i, "data_GEDI2_A.csv", row.names = F, quote=T)
+write.csv(temp_i$shot_number, "data_GEDI2_A_shot_number.csv", row.names = F)
 
-# Get 2_B data (right now, just pulls useful metadata, vertical PAI profiles, and vertical PAVD profiles)
+#### Get 2_B data (right now, just pulls useful metadata, vertical PAI profiles, and vertical PAVD profiles) ####
 files <- unlist(list.files(path="./GEDI02_B", pattern="h5", recursive=T, full.names=T))
-roots <- unlist(strsplit(unlist(lapply(strsplit(files, "/"), function(x) x[5])),".h5"))
 
 temp_i <- vector("list", length(files))
 
@@ -177,3 +178,55 @@ for (i in 1:length(files)){
 
 temp_i <- do.call(rbind, temp_i)
 write.csv(temp_i, "data_GEDI2_B.csv", row.names = F)
+write.csv(temp_i$shot_number, "data_GEDI2_B_shot_number.csv", row.names = F)
+
+#### Get 1_B data (right now, just pulls useful metadata) ####
+files <- unlist(list.files(path="./GEDI01_B", pattern="h5", recursive=T, full.names=T))
+
+temp_i <- vector("list", length(files))
+
+for (i in 1:length(files)){
+  
+  year <- as.integer(substr(files[i],42,45))
+  
+  temp <- h5ls(files[i])
+  temp <- temp[which(temp$dim != "1"),]
+  temp <- temp[-which(temp$dim==""),]
+  beams <- unique(unlist(lapply(strsplit(temp$group, "/"), function (x) x[2])))
+  
+  fn <- files[i] 
+  temp_j <- vector("list", length(beams))
+  
+  for (j in 1:length(beams)){
+    
+    temp <- data.frame(
+      
+      beam = as.numeric(h5read(fn, paste("/",beams[j],"/beam",sep=""))),
+      
+      channel = as.numeric(h5read(fn, paste("/",beams[j],"/channel",sep=""))),
+      
+      latitude_lastbin = as.numeric(h5read(fn, paste("/",beams[j],"/geolocation/latitude_lastbin",sep=""))),
+      
+      longitude_lastbin = as.numeric(h5read(fn, paste("/",beams[j],"/geolocation/longitude_lastbin",sep=""))),
+      
+      digital_elevation_model = as.numeric(h5read(fn, paste("/",beams[j],"/geolocation/digital_elevation_model",sep=""))),
+      
+      shot_number = as.character(h5read(fn, paste("/",beams[j],"/shot_number",sep=""), bit64conversion="bit64"))
+
+    )
+    
+    temp_j[[j]] <- cbind(temp,fn)
+    
+  }
+  
+  temp_j <- do.call(rbind, temp_j)
+  if(nrow(temp_j>0)){
+    temp_j$year <- year
+  }
+  temp_i[[i]] <- temp_j
+  
+}
+
+temp_i <- do.call(rbind, temp_i)
+write.csv(temp_i, "data_GEDI1_B.csv", row.names = F)
+write.csv(temp_i$shot_number, "data_GEDI1_B_shot_number.csv", row.names = F)
