@@ -1,0 +1,5 @@
+"instrument","pointDensity","meanCanopyHeight","canopyRugosity","meanLAI"
+"Airplane lidar",80,26.7,0.26,4.66
+"Drone lidar",663,25.5,0.11,3.9
+"Mobile lidar",20428,25.6,0.36,7.61
+"Terrestrial lidar",87035,26,0.3,6.01
