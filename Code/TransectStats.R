@@ -1,26 +1,26 @@
+#### packages ####
 library("lidR")
 library("terra")
 
 #### setup ####
-rootDir <- "/Volumes/KC_JPL/SERC_lidar/"
 
-# Define file path for MLS, ALS, and drone lidar files
-mlsFile <- paste0(rootDir,"transect/transect_mls.laz")
-alsFile <- paste0(rootDir,"transect/transect_als.laz")
-droneFile <- paste0(rootDir,"transect/transect_drone.laz")
-tlsFile <- paste0(rootDir,"transect/transect_tls.laz")
-
-# Make lidR catalog objects
-mlsCat <- catalog(mlsFile)
-alsCat <- catalog(alsFile)
-droneCat <- catalog(droneFile)
-tlsCat <- catalog(tlsFile)
+  # Define file path for MLS, ALS, and drone lidar files
+  mlsFile <- "Data/transect/transect_mls.laz"
+  alsFile <- "Data/transect/transect_als.laz"
+  droneFile <- "Data/transect/transect_drone.laz"
+  tlsFile <- "Data/transect/tls/"
+  
+  # Make lidR catalog objects
+  mlsCat <- catalog(mlsFile)
+  alsCat <- catalog(alsFile)
+  droneCat <- catalog(droneFile)
+  tlsCat <- catalog(tlsFile)
 
 #### make terrain model ####
 
-# use previously classified ALS data for whole area
-  alsAll <- catalog(paste0(rootDir,"ha4/als_ha4_clean.laz"))
-  dtm = rasterize_terrain(alsAll, res = 1, algorithm = knnidw(k = 6L, p = 2))
+  # use previously classified ALS data for entire ha 4
+  alsAll <- catalog("Data/ha4/als_ha4.laz")
+  dtm <- rasterize_terrain(alsAll, res = 1, algorithm = knnidw(k = 6L, p = 2))
 
 #### Calculate summary stats of transects ####
   
@@ -244,7 +244,7 @@ tlsCat <- catalog(tlsFile)
 ### TLS
       
       # read lidar data
-      data <- readLAS(tlsFile)
+      data <- readLAS(tlsCat)
       # subtract ground height
       dataNorm <- normalize_height(data, dtm)
       
@@ -325,12 +325,12 @@ tlsCat <- catalog(tlsFile)
       transectSummary$meanLAI[3] <- round(mean(aggregate(ePAI_mls$ePAI, by=list(ePAI_mls$X), FUN="sum")[,2]),2)
       
   # TLS
-      transectSummary$pointDensity[4] <- round(tlsCat$Number.of.point.records/(80*5))
+      transectSummary$pointDensity[4] <- round(sum(tlsCat$Number.of.point.records)/(80*5))
       transectSummary$meanCanopyHeight[4] <- round(mean(values(chm_tls),na.rm=T),1)
       transectSummary$canopyRugosity[4] <- round(sd(aggregate(ePAI_tls$ePAI, by=list(ePAI_tls$X), FUN="sd")[,2]),2)
       transectSummary$meanLAI[4] <- round(mean(aggregate(ePAI_tls$ePAI, by=list(ePAI_tls$X), FUN="sum")[,2]),2)
       
-      write.csv(transectSummary,"transectSummaryStats.csv",row.names = F)
+      write.csv(transectSummary,"Results/transectSummaryStats.csv",row.names = F)
       
      # calculate % variation in mean canopy height
      round(100*(max(transectSummary$meanCanopyHeight)-min(transectSummary$meanCanopyHeight))/min(transectSummary$meanCanopyHeight),1)
@@ -343,7 +343,7 @@ tlsCat <- catalog(tlsFile)
       
 #### Point cloud plots ####
      
-jpeg(filename = "PointCloudPlot.jpeg",
+jpeg(filename = "Results/PointCloudPlot.jpeg",
      width = 1800, height = 1200, units = "px", pointsize = 36,
      quality = 300)
 
@@ -394,7 +394,7 @@ jpeg(filename = "PointCloudPlot.jpeg",
     axis(side=1,at=seq(0,80,5),pos=-1)
     
     #TLS   
-    data <- readLAS(tlsFile)   
+    data <- readLAS(tlsCat)   
     dataNorm <- normalize_height(data, dtm)
     plot(x=dataNorm$X- 364560,y=dataNorm$Z,
          cex=ptCex,
@@ -416,9 +416,11 @@ dev.off()
   
 #### Trunk cross section plots ####
 
-trunkDrone <- readLAS("trunk/trunk_drone.laz")
-trunkMLS <- readLAS("trunk/trunk_mls.laz")
-trunkTLS <- readLAS("trunk/trunk_tls.laz")
+# These point clouds were manually subsetted in CloudCompare and saved as
+# separate .laz files for ease of plotting
+trunkDrone <- readLAS("Data/trunk/trunk_drone.laz")
+trunkMLS <- readLAS("Data/trunk/trunk_mls.laz")
+trunkTLS <- readLAS("Data/trunk/trunk_tls.laz")
 
 
 zMin <- 7.97
@@ -427,33 +429,11 @@ xRange <- c(364623.6,364624.7)
 yRange <- c(4305790.9,4305791.6)
 ptCex <- 0.4
 
-jpeg(filename = "TrunkPlot.jpeg",
+jpeg(filename = "Results/TrunkPlot.jpeg",
      width = 1200, height = 500, units = "px", pointsize = 36,
      quality = 300)
 
-  par(mfrow=c(1,3), mar=c(1,1,1,1),oma=c(2,2,2,2))
-  
-  plot(x = trunkDrone$X[trunkDrone$Z>zMin & trunkDrone$Z<zMax],
-       y = trunkDrone$Y[trunkDrone$Z>zMin & trunkDrone$Z<zMax],
-       pch=19,
-       xlim=xRange,
-       ylim=yRange,
-       cex=ptCex,
-       axes=F,ylab=NA,xlab=NA,
-       col = adjustcolor("black",0.5),
-       asp=1)
-  mtext("Drone lidar",side=3,line=-1,outer=F)
-  
-  plot(x = trunkMLS$X[trunkMLS$Z>zMin & trunkMLS$Z<zMax],
-       y = trunkMLS$Y[trunkMLS$Z>zMin & trunkMLS$Z<zMax],
-       pch=19,
-       xlim=xRange,
-       ylim=yRange,
-       cex=ptCex,
-       axes=F,ylab=NA,xlab=NA,
-       col = adjustcolor("black",0.5),
-       asp=1)
-  mtext("Mobile lidar",side=3,line=-1,outer=F)
+  par(mfrow=c(2,2), mar=c(1,1,1,1),oma=c(2,2,2,2))
   
   plot(x = trunkTLS$X[trunkTLS$Z>zMin & trunkTLS$Z<zMax],
        y = trunkTLS$Y[trunkTLS$Z>zMin & trunkTLS$Z<zMax],
@@ -470,6 +450,28 @@ jpeg(filename = "TrunkPlot.jpeg",
         lwd=2)
   text(" 20 cm", x=364623.6,y=4305790.95, adj=0)
 
+  plot(x = trunkMLS$X[trunkMLS$Z>zMin & trunkMLS$Z<zMax],
+       y = trunkMLS$Y[trunkMLS$Z>zMin & trunkMLS$Z<zMax],
+       pch=19,
+       xlim=xRange,
+       ylim=yRange,
+       cex=ptCex,
+       axes=F,ylab=NA,xlab=NA,
+       col = adjustcolor("black",0.5),
+       asp=1)
+  mtext("Mobile lidar",side=3,line=-1,outer=F)
+  
+  plot(x = trunkDrone$X[trunkDrone$Z>zMin & trunkDrone$Z<zMax],
+       y = trunkDrone$Y[trunkDrone$Z>zMin & trunkDrone$Z<zMax],
+       pch=19,
+       xlim=xRange,
+       ylim=yRange,
+       cex=ptCex,
+       axes=F,ylab=NA,xlab=NA,
+       col = adjustcolor("black",0.5),
+       asp=1)
+  mtext("Drone lidar",side=3,line=-1,outer=F)
+  
 dev.off()
 
 
@@ -487,7 +489,7 @@ dev.off()
   paiBreaks <- c(0,1e-8,0.25,0.5,1:5,paiRange[2])
   cexLab <- 1.2
   
-jpeg(filename = "VoxelMetricsPlot.jpeg",
+jpeg(filename = "Results/VoxelMetricsPlot.jpeg",
      width = 2400, height = 3000, units = "px", pointsize = 36,
      quality = 300)
   
