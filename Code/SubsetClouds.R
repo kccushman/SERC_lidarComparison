@@ -2,18 +2,22 @@
 
 library("lidR")
 
-rootDir <- "/Volumes/KC_JPL/SERC_lidar/"
+# NOTE: before running this section, download ha 4 data from the following Google Drive link:
+# 
+# and unzip the "TLS" folder
 
-# Define file path for MLS, ALS, and drone lidar files
-  mlsFile <- paste0(rootDir,"mls_ha4_alignedToALS.laz")
-  alsFile <- paste0(rootDir,"als_ha4_clean.laz")
-  droneFile <- paste0(rootDir,"drone_ha4_alignedToALS.laz")
-  tlsFile <- paste0(rootDir,"TLS_alignedToALS/")
+# Define file path for MLS, ALS, and uls lidar files
+  mlsFile <- "Data/ha4/mls_ha4.laz"
+  alsFile <- "Data/ha4/als_ha4.laz"
+  ulsFile <- "Data/ha4/drone_ha4.laz"
+  ulsOffFile <- "Data/ha4/drone_leafoff_ha4.las"
+  tlsFile <- "Data/ha4/TLS/"
   
 # Make lidR catalog objects
   mlsCat <- catalog(mlsFile)
   alsCat <- catalog(alsFile)
-  droneCat <- catalog(droneFile)
+  ulsCat <- catalog(ulsFile)
+  ulsOffCat <- catalog(ulsOffFile)
   tlsCat <- catalog(tlsFile)
 
 # Define transect ends and width (in m)
@@ -23,16 +27,25 @@ rootDir <- "/Volumes/KC_JPL/SERC_lidar/"
 
 # Subset point clouds
   mlsSub <-   clip_transect(mlsCat, p1 = transectP1, p2 = transectP2, width = transectWidth)
-  writeLAS(mlsSub,"/Volumes/KC_JPL/SERC_lidar/transect_mls.laz")
+  writeLAS(mlsSub,"Data/transect/transect_mls.laz")
   
   alsSub <-   clip_transect(alsCat, p1 = transectP1, p2 = transectP2, width = transectWidth)
-  writeLAS(alsSub,"/Volumes/KC_JPL/SERC_lidar/transect_als.laz")
+  writeLAS(alsSub,"Data/transect/transect_als.laz")
   
-  droneSub <-   clip_transect(droneCat, p1 = transectP1, p2 = transectP2, width = transectWidth)
-  writeLAS(droneSub,"/Volumes/KC_JPL/SERC_lidar/transect_drone.laz")
+  ulsSub <-   clip_transect(ulsCat, p1 = transectP1, p2 = transectP2, width = transectWidth)
+  writeLAS(ulsSub,"Data/transect/transect_drone.laz")
+  
+  ulsOffSub <-   clip_transect(ulsOffCat, p1 = transectP1, p2 = transectP2, width = transectWidth)
+  writeLAS(ulsOffSub,"Data/transect/transect_drone_leafoff.laz")
   
   tlsSub <-   clip_transect(tlsCat, p1 = transectP1, p2 = transectP2, width = transectWidth)
-  writeLAS(tlsSub,"/Volumes/KC_JPL/SERC_lidar/transect_tls.laz")
-  
-
-  
+  writeLAS(tlsSub,"Data/transect/transect_tls.laz")
+    # rewrite TLS transect into 40 m tiled data so that files are small enough for GitHub
+    tlsTransectCat <- catalog("Data/transect/transect_tls.laz")
+    opt_chunk_buffer(tlsTransectCat) <- 0 # set 0 m buffer
+    opt_chunk_size(tlsTransectCat) <- 40 # set 40 m max tile length
+    opt_laz_compression(tlsTransectCat) <- T
+    opt_output_files(tlsTransectCat) <- "Data/transect/tls/transect_tls_{XLEFT}_{YBOTTOM}"
+    tlsTransectCat <- catalog_retile(tlsTransectCat)
+    # remove single TLS file
+    file.remove("Data/transect/transect_tls.laz")
