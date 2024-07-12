@@ -3,11 +3,12 @@ library(bit64)
 library(sp)
 library(terra)
 
-# set working directory
-setwd("/Volumes/KC_JPL/SERC_lidar/GEDI/")
+# NOTE: before running this section, download all folders from the following Google Drive link:
+# https://drive.google.com/drive/folders/11y4RBRfPJSHqWiekDEiomRX5UlqNJeF0?usp=sharing
+# Keep organization in "GEDI01_B", "GEDI02_A", "GEDI02_B"
 
 #### Get 2_A data ####
-files <- unlist(list.files(path="./GEDI02_A", pattern="h5", recursive=T, full.names=T))
+files <- unlist(list.files(path="Data/GEDI/GEDI02_A", pattern="h5", recursive=T, full.names=T))
 
 temp_i <- vector("list", length(files))
 
@@ -88,11 +89,11 @@ for (i in 1:length(files)){
 }
 
 temp_i <- do.call(rbind, temp_i)
-write.csv(temp_i, "data_GEDI2_A.csv", row.names = F, quote=T)
-write.csv(temp_i$shot_number, "data_GEDI2_A_shot_number.csv", row.names = F)
+write.csv(temp_i, "Data/GEDI/data_GEDI2_A.csv", row.names = F, quote=T)
+write.csv(temp_i$shot_number, "Data/GEDI/data_GEDI2_A_shot_number.csv", row.names = F)
 
-#### Get 2_B data (right now, just pulls useful metadata, vertical PAI profiles, and vertical PAVD profiles) ####
-files <- unlist(list.files(path="./GEDI02_B", pattern="h5", recursive=T, full.names=T))
+#### Get 2_B data (only pulls useful metadata, vertical PAI profiles, and vertical PAVD profiles) ####
+files <- unlist(list.files(path="Data/GEDI/GEDI02_B", pattern="h5", recursive=T, full.names=T))
 
 temp_i <- vector("list", length(files))
 
@@ -177,11 +178,11 @@ for (i in 1:length(files)){
 }
 
 temp_i <- do.call(rbind, temp_i)
-write.csv(temp_i, "data_GEDI2_B.csv", row.names = F)
-write.csv(temp_i$shot_number, "data_GEDI2_B_shot_number.csv", row.names = F)
+write.csv(temp_i, "Data/GEDI/data_GEDI2_B.csv", row.names = F)
+write.csv(temp_i$shot_number, "Data/GEDI/data_GEDI2_B_shot_number.csv", row.names = F)
 
-#### Get 1_B data (right now, just pulls useful metadata) ####
-files <- unlist(list.files(path="./GEDI01_B", pattern="h5", recursive=T, full.names=T))
+#### Get 1_B data (only pulls useful metadata) ####
+files <- unlist(list.files(path="Data/GEDI//GEDI01_B", pattern="h5", recursive=T, full.names=T))
 
 temp_i <- vector("list", length(files))
 
@@ -228,5 +229,5 @@ for (i in 1:length(files)){
 }
 
 temp_i <- do.call(rbind, temp_i)
-write.csv(temp_i, "data_GEDI1_B.csv", row.names = F)
-write.csv(temp_i$shot_number, "data_GEDI1_B_shot_number.csv", row.names = F)
+write.csv(temp_i, "Data/GEDI/data_GEDI1_B.csv", row.names = F)
+write.csv(temp_i$shot_number, "Data/GEDI/data_GEDI1_B_shot_number.csv", row.names = F)
