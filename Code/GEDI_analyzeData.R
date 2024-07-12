@@ -1,14 +1,16 @@
-library(terra); library(lidR); library(sf)
+library(terra); library(lidR); library(sf); library(rGEDI)
 
-# set working directory
-  setwd("/Volumes/KC_JPL/SERC_lidar/GEDI/")
+#### Load GEDI data ####
 
-  data2a <- read.csv("data_GEDI2_A.csv")
-    data2a$shot_number <- read.csv("data_GEDI2_A_shot_number.csv",colClasses = "character")[,1]
-  data2b <- read.csv('data_GEDI2_B.csv')
-    data2b$shot_number <- read.csv("data_GEDI2_B_shot_number.csv",colClasses = "character")[,1]
-  data1b <- read.csv('data_GEDI1_B.csv')
-    data1b$shot_number <- read.csv("data_GEDI1_B_shot_number.csv",colClasses = "character")[,1]
+# These files were produced by previously running "GEDI_openData.R" using the
+# raw files from GEDI, which need to be downloaded from Google Drive (link in that script)
+
+  data2a <- read.csv("Data/GEDI/data_GEDI2_A.csv")
+    data2a$shot_number <- read.csv("Data/GEDI/data_GEDI2_A_shot_number.csv",colClasses = "character")[,1]
+  data2b <- read.csv('Data/GEDI/data_GEDI2_B.csv')
+    data2b$shot_number <- read.csv("Data/GEDI/data_GEDI2_B_shot_number.csv",colClasses = "character")[,1]
+  data1b <- read.csv('Data/GEDI/data_GEDI1_B.csv')
+    data1b$shot_number <- read.csv("Data/GEDI/data_GEDI1_B_shot_number.csv",colClasses = "character")[,1]
   
   years <- unique(data2a$year)
 
@@ -32,8 +34,8 @@ library(terra); library(lidR); library(sf)
                             nGoodOn = NA)
   
   gediSummary[gediSummary$year=="All","nAll"] <- nrow(data2a)
-  gediSummary[gediSummary$year=="All","nGood"] <- nrow(data2a[data2a$quality_flag==1,])
-  gediSummary[gediSummary$year=="All","nGoodOn"] <- nrow(data2a[data2a$quality_flag==1 & data2a$leaf_off_flag=="00",])
+  gediSummary[gediSummary$year=="All","nGood"] <- nrow(data2a[data2a$quality_flag==1,]) # subset by quality flag
+  gediSummary[gediSummary$year=="All","nGoodOn"] <- nrow(data2a[data2a$quality_flag==1 & data2a$leaf_off_flag=="00",]) # subset by leaf off flag
   
   for(i in 1:length(years)){
     gediSummary[gediSummary$year==years[i],"nAll"] <- nrow(data2a[data2a$year==years[i],])
@@ -44,19 +46,20 @@ library(terra); library(lidR); library(sf)
   
 #### plot data availability ####
   
-  # turn data into spatial object
+  # turn GEDI data frame into spatial object
   data2aSp <- vect(data2a, geom=c("lon_lowestmode", "lat_lowestmode"), crs="epsg:4326", keepgeom=FALSE)
   
   # get ha 4 outline
-  cat_ha4 <- catalog("/Volumes/KC_JPL/SERC_lidar/ha4/als_ha4_clean.laz")
+  cat_ha4 <- catalog("Data/ha4/als_ha4.laz")
   extent4_utm <- vect(ext(cat_ha4),crs="epsg:32618")
   extent4_latLon <- project(extent4_utm,"epsg:4326")
   
   # SERC NEON site
-mainCex=0.7
-labCex=0.8
+  mainCex=0.7
+  labCex=0.8
 
-jpeg(filename = "GEDI_sercSite.jpeg",
+# First, make a plot for the whole SERC NEON site  
+jpeg(filename = "Results/GEDI_sercSite.jpeg",
      width = 1100, height = 1200, units = "px", pointsize = 36,
      quality = 300)
   par(mfrow=c(2,2),las=1,mar=c(0,0,0,0),oma=c(2,2,1,1))
@@ -98,14 +101,14 @@ jpeg(filename = "GEDI_sercSite.jpeg",
   
 dev.off()
 
-  # ha 4
+  # Subset data from only ha 4 of the SERC ForestGEO site
   
   data_ha4 <- mask(data2aSp,extent4_latLon)
   data_ha4_utm <- project(data_ha4, "epsg:32618")
   data_ha4_utmPoly <- buffer(data_ha4_utm,width=12.5)
   data_ha4_utmPoly_good <- data_ha4_utmPoly[data_ha4_utmPoly$quality_flag==1 & data_ha4_utmPoly$leaf_off_flag=="00" & data_ha4_utmPoly$year=="2021",]
   
-jpeg(filename = "GEDI_ha4.jpeg",
+jpeg(filename = "Results/GEDI_ha4.jpeg",
      width = 1100, height = 500, units = "px", pointsize = 36,
      quality = 300)
   par(mfrow=c(1,2),las=1,mar=c(0,0,0,0),oma=c(2,2,0,0))
@@ -131,20 +134,34 @@ jpeg(filename = "GEDI_ha4.jpeg",
   mtext("Northing (m)", side=1, outer=T, cex = labCex, line=0)
   
 dev.off()  
+
 #### clip drone lidar over the same area as GEDI data ####
-  droneCtg <- catalog("/Volumes/KC_JPL/SERC_lidar/GatorEye/Original/")
+
+# NOTE: before running this section, download ha 4 drone data from the following Google Drive link:
+# https://drive.google.com/drive/folders/1zTAWz94pnOWlbFfPlgONtNq5IFj58dgW?usp=sharing
+# file: drone_ha4.laz
+
+  droneCtg <- catalog("Data/ha4/drone_ha4.laz")
   for(i in 1:length(data_ha4_utmPoly_good)){
     GEDI_clip <- clip_roi(droneCtg, st_as_sf(data_ha4_utmPoly_good[i,]))
-    writeLAS(GEDI_clip,paste0("GEDI_example",i,".laz"))
+    writeLAS(GEDI_clip,paste0("Data/GEDI/GEDI_example",i,".laz"))
   }
   
 #### read and plot full waveform for comparison data ####
-library(rGEDI)
-  
+
+# Get the shot number for the first good shot
 goodShot <- data_ha4_utmPoly_good$shot_number[1]
 
 # find correct file to read for 1b waveform
-goodFile <- data1b[data1b$shot_number==goodShot,"fn"]
+  # get file path and split into components
+  goodFile <- strsplit(data1b[data1b$shot_number==goodShot,"fn"], split = "/")
+  # edit the path for repository structure
+  goodFile[[1]][1] <- "Data/GEDI"
+  # recollapse into a single path
+  goodFile <- paste(goodFile[[1]], collapse="/")
+
+
+# get the elevation value from the level 2A data
 elevation <- data2a[data2a$shot_number==goodShot,"elev_lowestmode"]
   
 data1B <- readLevel1B(goodFile) # both good ha 4 shots are in the same .h5 file
@@ -161,30 +178,51 @@ data1B_elevation <- data1B_shot@dt$elevation
   data1B_htAboveGround <- data1B_shot@dt$elevation - elevation 
   
 # get min and max Z values from drone lidar
-droneShot <- readLAS("GEDI_example1.laz")
+droneShot <- readLAS("Data/GEDI/GEDI_example1.laz")
 
 lineWidth <- 4
-jpeg(filename = "GEDI_example.jpeg",
-     width = 1800, height = 1200, units = "px", pointsize = 36,
+
+jpeg(filename = "Results/GEDI_example.jpeg",
+     width = 1800, height = 1100, units = "px", pointsize = 36,
      quality = 300)
-  par(mar=c(3,3,1,1), oma=c(2,2,0,0), mfrow=c(1,2), las=1)
+
+  par(mar=c(3,3,1,1), oma=c(2,3,0,0), mfrow=c(1,3), las=1)
+  
+  # First panel: plot wavelength from minimum to maximum values,
+  # Scale y-axis to height above ground value
   plot(x = data1B_amplitudeScaled,
-       y = data1B_elevation,
+       y = data1B_htAboveGround,
        xlab=NA,ylab=NA,
        type = "l", lwd=lineWidth)
+  # Add red lines for drone data min and 98th percentile heights
   abline(h=c(min(droneShot$Z),quantile(droneShot$Z,0.98)),
          lwd=lineWidth+2,col=adjustcolor("red",0.6))
-  abline(h=c(elevation,data_ha4_utmPoly_good$rh_98[1] + elevation),
+  # Add blue lines from GEDI ground and RH 98 values
+  abline(h=c(0,data_ha4_utmPoly_good$rh_98[1]),
          lwd=lineWidth+2, col=adjustcolor("blue",0.6))
+  
+  # Second panel: zoom in closer to min and max heights to better see waveform
   plot(x = data1B_amplitudeScaled,
-       y = data1B_elevation,
-       ylim=c(-40,10),
+       y = data1B_htAboveGround,
+       ylim=c(-10,40),
        xlab=NA,ylab=NA,
        type = "l",lwd=lineWidth)
+  # Add red lines for drone data min and 98th percentile heights
   abline(h=c(min(droneShot$Z),quantile(droneShot$Z,0.98)),
          lwd=lineWidth+2,col=adjustcolor("red",0.6))
-  abline(h=c(elevation,data_ha4_utmPoly_good$rh_98[1] + elevation),
+  # Add blue lines from GEDI ground and RH 98 values
+  abline(h=c(0,data_ha4_utmPoly_good$rh_98[1]),
          lwd=lineWidth+2, col=adjustcolor("blue",0.6))
   mtext("Scaled waveform amplitude", side=1, outer=T, cex=1.5)
-  mtext("Elevation (m)", side=2, outer=T, las=0, cex=1.5, line=0.5)
+  mtext("Height above ground (m)", side=2, outer=T, las=0, cex=1.5, line=0.5)
+  
+  plot(x=droneShot$X-mean(droneShot$X,na.rm=T),
+       y=droneShot$Z-min(droneShot$Z,na.rm=T),
+       pch=19,
+       cex=0.08,
+       col=adjustcolor("black",0.5),
+       axes=F,
+       asp=1)
+  axis(side=2,pos=-14, at=seq(0,40,10))
+  
 dev.off()  
