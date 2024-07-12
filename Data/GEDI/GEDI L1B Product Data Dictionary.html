@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<!-- saved from url=(0083)https://lpdaac.usgs.gov/documents/585/gedi_l1b_product_data_dictionary_P003_v1.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252"><title>GEDI L1B Product Data Dictionary</title>
+
+  
+    <style type="text/css" media="all">
+      <!--
+      body {
+        font-family: Arial,Helvetica,sans-serif;
+        font-size: 12px;
+      }
+
+      div.data_dict {
+        width: 952px;
+      }
+
+      .gedi_group {background-color: #BBCCF0;}
+      .gedi_attribute_name {background-color: #FAFAD2;}
+      .gedi_attribute_type {background-color: #FAFAD2;}
+      .gedi_attribute_descript {background-color: #FAFAD2;}
+      .gedi_header {background-color: #D9D9D9;}
+      .gedi_label {width: 120px; background-color: #FFFFFF;}
+      .gedi_dtype {width: 50px; background-color: #FFFFFF;}
+      .gedi_longname {width: 200px; background-color: #FFFFFF;}
+      .gedi_units {width: 120px; background-color: #FFFFFF;}
+      .gedi_descript {width: 300px; background-color: #FFFFFF;}
+
+      .gedi_dimensions {display: none;}
+      .gedi_coordinates {display: none;}
+      .gedi_attribute_value {display: none;}
+      .gedi_fillvalue {display: none;}
+      .gedi_validrange {display: none;}
+
+      table.gedi_metadata_table {
+        width: 100%;
+        border-style: solid;
+        border-width: 1px;
+        border-color: black;
+        border-collapse: collapse;
+        background: #D9D9D9;
+        text-align: left;
+        vertical-align: top;
+        font-size: 12px;
+      }
+
+      table.gedi_metadata_table tr td {
+        border-style: solid;
+        border-width: 1px;
+        border-color: black;
+        border-collapse: collapse;
+        font-size: 11px;
+        padding: 4px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      table.gedi_metadata_table th {
+        border-style: solid;
+        border-width: 1px;
+        border-color: black;
+        border-collapse: collapse;
+        background-color: #BBCCF0;
+        color: #000000;
+        text-align: center;
+        vertical-align: top;
+        font-size: 12px;
+        padding: 4px 4px 4px 4px;
+      }
+
+      table.gedi_parameter_table {
+        width: 100%;
+        margin: 0px;
+        padding: 0px;
+        border-style: solid;
+        border-width: 1px;
+        border-collapse: collapse;
+        border-color: black;
+        background: #D9D9D9;
+        margin-bottom: 5px;
+        text-align: left;
+        vertical-align: top;
+        font-size: 12px;
+      }
+
+      table.gedi_parameter_table tr td {
+        font-size: 11px;
+        padding: 4px;
+        text-align: left;
+        vertical-align: top;
+        border-style: solid;
+        border-width: 1px;
+        border-collapse: collapse;
+        border-color: black;
+      }
+
+      table.gedi_parameter_table th {
+        background-color: #BBCCF0;
+        color: #000000;
+        text-align: center;
+        vertical-align: top;
+        font-size: 12px;
+        border-style: solid;
+        border-width: 1px;
+        border-collapse: collapse;
+        border-color: black;
+        padding: 4px 4px 4px 4px;
+      }
+
+      table.gedi_flag_table {
+        width: 100%;
+        border-style: dotted;
+        border-width: 1px;
+        border-collapse: collapse;
+        background: #D9D9D9;
+        margin-bottom: 5px;
+        text-align: left;
+        vertical-align: top;
+        font-size: 12px;
+      }
+
+      table.gedi_flag_table tr td {
+        font-size: 11px;
+        padding: 4px;
+        text-align: left;
+        vertical-align: top;
+        border-style: dotted;
+        border-width: 1px;
+        border-collapse: collapse;
+      }
+
+      table.gedi_flag_table th {
+        background-color: #D9D9D9;
+        color: #000000;
+        text-align: center;
+        vertical-align: top;
+        font-size: 12px;
+        padding: 4px 4px 4px 4px;
+        border-style: dotted;
+        border-width: 1px;
+        border-collapse: collapse;
+      }
+
+      table.gedi_dimension_key_table {
+        text-align: left;
+        vertical-align: top;
+        font-size: 12px;
+        border-style: solid;
+        border-width: 1px;
+        border-collapse: collapse;
+        border-color: black;
+        padding: 4px 4px 4px 4px;
+      }
+
+      table.gedi_dimension_key_table tr td {
+        font-size: 11px;
+        padding: 4px;
+        text-align: left;
+        vertical-align: top;
+        border-style: solid;
+        border-width: 1px;
+        border-collapse: collapse;
+        border-color: black;
+      }
+
+      table.gedi_dimension_key_table th {
+        font-size: 11px;
+        padding: 4px;
+        text-align: left;
+        vertical-align: top;
+        border-style: solid;
+        border-width: 1px;
+        border-collapse: collapse;
+        border-color: black;
+      }
+      -->
+    </style>
+  <script id="VisualSPOnlineHelpAppScript_jQuery" src="chrome-extension://mahfncngjcmmhemjlbdiogjnngdcajab/lib/jquery/jquery-4.0.0-beta.min.js?Version=2024.7.11.1&amp;ExtVersion=2.0.153.0" async="" type="text/javascript"></script><link id="VisualSPOnlineHelpAppCSS_VisualSPCore" href="chrome-extension://mahfncngjcmmhemjlbdiogjnngdcajab/lib/host/css/visualsp-host-core.min.css?Version=2024.7.11.1&amp;ExtVersion=2.0.153.0" rel="stylesheet" type="text/css"><script id="VisualSPOnlineHelpAppScript_Main" src="chrome-extension://mahfncngjcmmhemjlbdiogjnngdcajab/js/VisualSPHost.js?Extension=Chrome&amp;EnableEverywhere=true&amp;Version=2024.7.11.1&amp;ExtVersion=2.0.153.0" async="" type="text/javascript"></script><script id="VisualSPOnlineHelpAppScript_VisualSPHostCore" src="chrome-extension://ohdihpdgfenligmhnmldmiabdhflokkh/lib/host/js/VisualSPHostCore.min.js?Version=2024.7.11.1&amp;ExtVersion=2.0.153.0" async="" type="text/javascript"></script></head>
+
+  <body>
+    <div class="data_dict">
+      <h1>GEDI L1B Product Data Dictionary</h1>
+
+      <table class="gedi_dimension_key_table">
+        <tbody><tr>
+          <th>Dimension Variable</th>
+          <th>Description</th>
+        </tr>
+        <tr>
+          <td>MT</td>
+          <td>Number of shots</td>
+        </tr>
+        <tr>
+          <td>AV</td>
+          <td>Number of average waveform groups</td>
+        </tr>
+      </tbody></table>
+      <br><br>
+
+      <table class="gedi_parameter_table">
+        <tbody><tr>
+          <td class="gedi_group" colspan="5">Group: /</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">short_name</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">GEDI_L1B</td>
+          <td class="gedi_attribute_value">${DESCRIPTION}</td>
+        </tr>
+
+        <tr>
+          <td class="gedi_group" colspan="5">Group: /METADATA/DatasetIdentification</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">abstract</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">The GEDI L1A and L1B standard data product contains precise latitude, longitude, and height above the reference ellipsoid of the laser shot received bounce point for all laser shots.  Geophysical corrections are applied to the surface return values for each laser shot.  Geophysical corrections, atmospheric corrections, and the surface types are provided for each laser shot.</td>
+          <td class="gedi_attribute_value">${DESCRIPTION}</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">characterSet</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">utf8</td>
+          <td class="gedi_attribute_value">${DESCRIPTION}</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">creationDate</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">File creation date</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">credit</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">The software that generates the L1B product was designed and implemented within the GEDI Science Data Processing System at the NASA Goddard Space Flight Center in Greenbelt, Maryland.</td>
+          <td class="gedi_attribute_value">${DESCRIPTION}</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">fileName</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">Original file name</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">language</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">eng</td>
+          <td class="gedi_attribute_value">${DESCRIPTION}</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">originatorOrganizationName</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">GSFC GEDI-SDPS &gt; GEDI Science Data Processing System</td>
+          <td class="gedi_attribute_value">${DESCRIPTION}</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">PGEVersion</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">Product generating executive SDPS release ID</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">purpose</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">The purpose of the L1B dataset is to provide geolocated waveforms and supporting datasets for each laser shot for all eight GEDI beams.  This includes corrected and smoothed waveforms, geolocation parameters, and geophysical corrections.</td>
+          <td class="gedi_attribute_value">${DESCRIPTION}</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">shortName</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">GEDI_L1B</td>
+          <td class="gedi_attribute_value">${DESCRIPTION}</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">spatialRepresentationType</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">along-track</td>
+          <td class="gedi_attribute_value">${DESCRIPTION}</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">status</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">onGoing</td>
+          <td class="gedi_attribute_value">${DESCRIPTION}</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">topicCategory</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">geoscientificInformation</td>
+          <td class="gedi_attribute_value">${DESCRIPTION}</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">uuid</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">Universally unique identifier (UUID) for this file</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">VersionID</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">SDPS DAAC release ID</td>
+        </tr>
+
+        <tr>
+          <td class="gedi_group" colspan="5">Group: /BEAMXXXX</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">description</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">"Coverage beam" or "Full power beam"</td>
+        </tr>
+        <tr>
+          <td class="gedi_header">Label</td>
+          <td class="gedi_header">Datatype<br>(Dimensions)</td>
+          <td class="gedi_header">long_name</td>
+          <td class="gedi_header">units<br>source</td>
+          <td class="gedi_header">description</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">all_samples_sum</td>
+          <td class="gedi_dtype">UINT32<br>(MT)</td>
+          <td class="gedi_longname">All samples sum</td>
+          <td class="gedi_units">counts from the ADC (Analog-to-Digital Converter)<br>L0B</td>
+          <td class="gedi_descript">Sum of all values within the 10 km range window.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">beam</td>
+          <td class="gedi_dtype">UINT16<br>(MT)</td>
+          <td class="gedi_longname">Beam</td>
+          <td class="gedi_units">counter<br>Derived</td>
+          <td class="gedi_descript">Beam number (0-11).</td>
+          <td class="gedi_validrange">0, 11</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">channel</td>
+          <td class="gedi_dtype">UINT8<br>(MT)</td>
+          <td class="gedi_longname">Channel</td>
+          <td class="gedi_units">counter<br>L0B</td>
+          <td class="gedi_descript">Channel number (0-7).</td>
+          <td class="gedi_validrange">0, 7</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">master_frac</td>
+          <td class="gedi_dtype">FLOAT64<br>(MT)</td>
+          <td class="gedi_longname">Master time fractional seconds</td>
+          <td class="gedi_units">seconds<br>Derived</td>
+          <td class="gedi_descript">Master time, fractional part.  master_int+master_frac is equivalent to /BEAMXXXX/geolocation/delta_time and /BEAMXXXX/geophys_corr/delta_time.</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">master_int</td>
+          <td class="gedi_dtype">UINT32<br>(MT)</td>
+          <td class="gedi_longname">Master time integer seconds</td>
+          <td class="gedi_units">seconds<br>Derived</td>
+          <td class="gedi_descript">Master time, integer part.  Seconds since master_time_epoch.  master_int+master_frac is equivalent to /BEAMXXXX/geolocation/delta_time and /BEAMXXXX/geophys_corr/delta_time.</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">noise_mean_corrected</td>
+          <td class="gedi_dtype">FLOAT64<br>(MT)</td>
+          <td class="gedi_longname">Noise mean</td>
+          <td class="gedi_units">counts from the ADC (Analog-to-Digital Converter)<br>L0B</td>
+          <td class="gedi_descript">Noise mean.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">noise_stddev_corrected</td>
+          <td class="gedi_dtype">FLOAT64<br>(MT)</td>
+          <td class="gedi_longname">Standard deviation</td>
+          <td class="gedi_units">counts from the ADC<br>Derived</td>
+          <td class="gedi_descript">Corrected noise standard deviation.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">nsemean_even</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Noise mean even</td>
+          <td class="gedi_units">counts from the ADC<br>Instrument housekeeping</td>
+          <td class="gedi_descript">Noise mean of the beam's detector channel from even sub-converter.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">nsemean_odd</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Noise mean odd</td>
+          <td class="gedi_units">counts from the ADC<br>Instrument housekeeping</td>
+          <td class="gedi_descript">Noise mean of the beam's odd sub-converter.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">rx_energy</td>
+          <td class="gedi_dtype">FLOAT64<br>(MT)</td>
+          <td class="gedi_longname">RX energy</td>
+          <td class="gedi_units">sample number (~1ns) multiplied by counts from the ADC<br>Derived</td>
+          <td class="gedi_descript">Integrated energy in RX waveform after subtracting the noise mean.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">rx_offset</td>
+          <td class="gedi_dtype">UINT16<br>(MT)</td>
+          <td class="gedi_longname">RX offset</td>
+          <td class="gedi_units">sample intervals (~1 ns)<br>L0B</td>
+          <td class="gedi_descript">Time interval from first stored sample to first downloaded RX sample (1ns resolution).</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">rx_open</td>
+          <td class="gedi_dtype">UINT32<br>(MT)</td>
+          <td class="gedi_longname">RX open</td>
+          <td class="gedi_units">sample intervals (~1 ns)<br>L0B</td>
+          <td class="gedi_descript">Time interval from t0 to first stored RX sample (4ns resolution).</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">rx_sample_count</td>
+          <td class="gedi_dtype">UINT16<br>(MT)</td>
+          <td class="gedi_longname">RX sample count</td>
+          <td class="gedi_units">sample intervals<br>L0B</td>
+          <td class="gedi_descript">The number of sample intervals (elements) in each RX waveform.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">rx_sample_start_index</td>
+          <td class="gedi_dtype">UINT64<br>(MT)</td>
+          <td class="gedi_longname">RX sample start index</td>
+          <td class="gedi_units">index (origin 1)<br>Derived</td>
+          <td class="gedi_descript">The index in the rxwaveform dataset of the first element of each RX waveform.  The indices start at 1.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">rxwaveform</td>
+          <td class="gedi_dtype">FLOAT32<br>(UNLIMITED)</td>
+          <td class="gedi_longname">RX waveform</td>
+          <td class="gedi_units">counts from the ADC<br>Derived</td>
+          <td class="gedi_descript">The corrected receive (RX) waveforms.  Use rx_sample_count and rx_sample_start_index to identify the location of each waveform.</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">selection_stretchers_x</td>
+          <td class="gedi_dtype">UINT16<br>(MT)</td>
+          <td class="gedi_longname">Selection stretchers X</td>
+          <td class="gedi_units">sample intervals (~1 ns)<br>L0B</td>
+          <td class="gedi_descript">Commanded number of samples added to algo section on the left.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">selection_stretchers_y</td>
+          <td class="gedi_dtype">UINT16<br>(MT)</td>
+          <td class="gedi_longname">Selection stretchers Y</td>
+          <td class="gedi_units">sample intervals (~1 ns)<br>L0B</td>
+          <td class="gedi_descript">Commanded number of samples added to algo section on the right.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">shot_number</td>
+          <td class="gedi_dtype">UINT64<br>(MT)</td>
+          <td class="gedi_longname">Shot number</td>
+          <td class="gedi_units">counter<br>Derived</td>
+          <td class="gedi_descript">Unique shot ID.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">stale_return_flag</td>
+          <td class="gedi_dtype">UINT8<br>(MT)</td>
+          <td class="gedi_longname">Stale return flag</td>
+          <td class="gedi_units">boolean<br>L0B</td>
+          <td class="gedi_descript">Indicates that a "stale" cue point from the coarse search algorithm is being used.</td>
+          <td class="gedi_validrange">0, 1</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">th_left_used</td>
+          <td class="gedi_dtype">UINT16<br>(MT)</td>
+          <td class="gedi_longname">Threshold fine left used</td>
+          <td class="gedi_units">counts from the ADC<br>L0B</td>
+          <td class="gedi_descript">Count values for left threshold used in fine search. Two consecutive points at or above this value indicates pulse detection.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">tx_egamplitude</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">TX extended Gaussian amplitude</td>
+          <td class="gedi_units">counts from the ADC<br>Derived</td>
+          <td class="gedi_descript">Amplitude of the extended Gaussian fit to the TX waveform.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">tx_egamplitude_error</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">TX extended Gaussian amplitude error</td>
+          <td class="gedi_units">counts from the ADC<br>Derived</td>
+          <td class="gedi_descript">Error on tx_egamplitude.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">tx_egbias</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">TX extended Gaussian bias</td>
+          <td class="gedi_units">counts from the ADC<br>Derived</td>
+          <td class="gedi_descript">Bias of the extended Gaussian fit to the TX waveform.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">tx_egbias_error</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">TX extended Gaussian bias error</td>
+          <td class="gedi_units">counts from the ADC<br>Derived</td>
+          <td class="gedi_descript">Error on tx_egbias.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">tx_egflag</td>
+          <td class="gedi_dtype">UINT8<br>(MT)</td>
+          <td class="gedi_longname">TX extended Gaussian flag</td>
+          <td class="gedi_units">flag<br>Derived</td>
+          <td class="gedi_descript">Extended Gaussian fit status flag.  1=convergence in chi2 value, 2=convergence in parameter value, 3=convergence in chi2 and parameter values, 4=convergence in orthogonality, 5=maximum number of iterations reached, 6=ftol too small (no further improvement), 7=xtol too small (no further improvement), 8=gtol too small (no further improvement).</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">tx_eggamma</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">TX extended Gaussian gamma</td>
+          <td class="gedi_units">N/A<br>Derived</td>
+          <td class="gedi_descript">Gamma value of the extended Gaussian fit to the TX waveform.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">tx_eggamma_error</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">TX extended Gaussian gamma error</td>
+          <td class="gedi_units">N/A<br>Derived</td>
+          <td class="gedi_descript">Error on tx_eggamma.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">tx_egsigma</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">TX extended Gaussian sigma</td>
+          <td class="gedi_units">sample intervals (~1 ns)<br>Derived</td>
+          <td class="gedi_descript">Sigma of the extended Gaussian fit to the TX waveform.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">tx_egsigma_error</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">TX extended Gaussian sigma error</td>
+          <td class="gedi_units">sample intervals (~1 ns)<br>Derived</td>
+          <td class="gedi_descript">Error on tx_egsigma.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">tx_gloc</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">TX Gaussian location</td>
+          <td class="gedi_units">sample intervals (~1 ns)<br>Derived</td>
+          <td class="gedi_descript">Location (mean) of the Gaussian fit to the TX waveform.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">tx_gloc_error</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">TX Gaussian location error</td>
+          <td class="gedi_units">sample intervals (~1 ns)<br>Derived</td>
+          <td class="gedi_descript">Error on tx_gloc.</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">tx_pulseflag</td>
+          <td class="gedi_dtype">UINT8<br>(MT)</td>
+          <td class="gedi_longname">TX pulse flag</td>
+          <td class="gedi_units">boolean<br>Derived</td>
+          <td class="gedi_descript">Set to 1 if a pulse is detected in the TX waveform.</td>
+          <td class="gedi_validrange">0, 1</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">tx_sample_count</td>
+          <td class="gedi_dtype">UINT16<br>(MT)</td>
+          <td class="gedi_longname">TX sample count</td>
+          <td class="gedi_units">sample intervals<br>Derived</td>
+          <td class="gedi_descript">The number of sample intervals (elements) in each TX waveform.</td>
+          <td class="gedi_validrange">0, 1</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">tx_sample_start_index</td>
+          <td class="gedi_dtype">UINT64<br>(MT)</td>
+          <td class="gedi_longname">TX sample start index</td>
+          <td class="gedi_units">index (origin 1)<br>Derived</td>
+          <td class="gedi_descript">The index in the txwaveform dataset of the first element of each TX waveform.  The indices start at 1.</td>
+          <td class="gedi_validrange">0, 1</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">txwaveform</td>
+          <td class="gedi_dtype">FLOAT32<br>(UNLIMITED)</td>
+          <td class="gedi_longname">TX waveform</td>
+          <td class="gedi_units">counts from the ADC<br>Derived</td>
+          <td class="gedi_descript">The corrected transmit (TX) waveforms.  Use tx_sample_count and tx_sample_start_index to identify the location of each waveform.</td>
+        </tr>
+
+        <tr>
+          <td class="gedi_group" colspan="5">Group: /BEAMXXXX/ancillary</td>
+        </tr>
+        <tr>
+          <td class="gedi_header">Label</td>
+          <td class="gedi_header">Datatype<br>(Dimensions)</td>
+          <td class="gedi_header">long_name</td>
+          <td class="gedi_header">units<br>source</td>
+          <td class="gedi_header">description</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">master_time_epoch</td>
+          <td class="gedi_dtype">FLOAT64<br>(1)</td>
+          <td class="gedi_longname">Master time epoch</td>
+          <td class="gedi_units">seconds<br></td>
+          <td class="gedi_descript">Number of GPS seconds between the GPS epoch (1980-01-06T00:00:00Z) and the GEDI epoch (2018-01-01T00:00:00Z). Add this value to delta_time parameters to compute full GPS seconds (relative to the GPS epoch) for each data point.</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">mean_samples</td>
+          <td class="gedi_dtype">INT64<br>(1)</td>
+          <td class="gedi_longname">Mean samples</td>
+          <td class="gedi_units">shots<br>Configuration</td>
+          <td class="gedi_descript">Averaging window (shots) for non-repeated odd-even measurements from housekeeping.</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">smoothing_width</td>
+          <td class="gedi_dtype">FLOAT64<br>(1)</td>
+          <td class="gedi_longname">Smoothing width</td>
+          <td class="gedi_units">sample intervals (~1 ns)<br>Configuration</td>
+          <td class="gedi_descript">The 1-sigma width (nsec) of the gaussian kernel used to smooth the corrected waveform.</td>
+        </tr>
+
+        <tr>
+          <td class="gedi_group" colspan="5">Group: /BEAMXXXX/geolocation</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">description</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">Geolocation</td>
+          <td class="gedi_attribute_value">${DESCRIPTION}</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">vegas_githash</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">Git commit hash of the VEGAS software used to create the L1B file</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">vegas_version</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">Version number of the VEGAS software used to create the L1B file</td>
+        </tr>
+        <tr>
+          <td class="gedi_header">Label</td>
+          <td class="gedi_header">Datatype<br>(Dimensions)</td>
+          <td class="gedi_header">long_name</td>
+          <td class="gedi_header">units<br>source</td>
+          <td class="gedi_header">description</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">altitude_instrument</td>
+          <td class="gedi_dtype">FLOAT64<br>(MT)</td>
+          <td class="gedi_longname">Instrument altitude</td>
+          <td class="gedi_units">meters<br>Derived</td>
+          <td class="gedi_descript">Height of the instrument diffractive optical element (DOE) above the WGS84 ellipsoid.</td>
+          <td class="gedi_coordinates">delta_time latitude_instrument longitude_instrument</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">altitude_instrument_error</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Instrument altitude error</td>
+          <td class="gedi_units">meters<br>Derived</td>
+          <td class="gedi_descript">Error on altitude_instrument.</td>
+          <td class="gedi_coordinates">delta_time latitude_instrument longitude_instrument</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">bounce_time_offset_bin0</td>
+          <td class="gedi_dtype">FLOAT64<br>(MT)</td>
+          <td class="gedi_longname">Bounce time offset bin 0</td>
+          <td class="gedi_units">seconds<br>Derived</td>
+          <td class="gedi_descript">The difference between the transmit time and the time at the start of the RX window</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0 longitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">bounce_time_offset_bin0_error</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Bounce time offset bin 0 error</td>
+          <td class="gedi_units">seconds<br>Derived</td>
+          <td class="gedi_descript">Error on bounce_time_offset_bin0.</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0 longitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">bounce_time_offset_lastbin</td>
+          <td class="gedi_dtype">FLOAT64<br>(MT)</td>
+          <td class="gedi_longname">Bounce time offset last bin</td>
+          <td class="gedi_units">seconds<br>Derived</td>
+          <td class="gedi_descript">The difference between the transmit time and the time at the end of the RX window</td>
+          <td class="gedi_coordinates">delta_time latitude_lastbin longitude_lastbin</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">bounce_time_offset_lastbin_error</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Bounce time offset last bin error</td>
+          <td class="gedi_units">seconds<br>Derived</td>
+          <td class="gedi_descript">Error on bounce_time_offset_lastbin.</td>
+          <td class="gedi_coordinates">delta_time latitude_lastbin longitude_lastbin</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">degrade</td>
+          <td class="gedi_dtype">INT8<br>(MT)</td>
+          <td class="gedi_longname">Degrade</td>
+          <td class="gedi_units">flag<br>Derived</td>
+          <td class="gedi_descript">Greater than zero if the shot occurs during a degrade period, zero otherwise.</td>
+          <td class="gedi_validrange">0, 1</td>
+          <td class="gedi_coordinates">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">delta_time</td>
+          <td class="gedi_dtype">FLOAT64<br>(MT)</td>
+          <td class="gedi_longname">Delta time</td>
+          <td class="gedi_units">seconds since 2018-01-01<br>Derived</td>
+          <td class="gedi_descript">Transmit time of the shot, measured in seconds from the master_time_epoch.  By adding the offset contained within /BEAMXXXX/ancillary/master_time_epoch to delta_time, the time in GPS seconds relative to the GPS epoch can be computed.  Equivalent to /BEAMXXXX/master_int+/BEAMXXXX/master_frac.</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0 longitude_bin0</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">digital_elevation_model</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Digital elevation model</td>
+          <td class="gedi_units">meters<br>TanDEM-X DEM</td>
+          <td class="gedi_descript">Digital elevation model height above the WGS84 ellipsoid.  Interpolated at latitude_bin0 and longitude_bin0 from the TandemX 90m product.</td>
+          <td class="gedi_validrange">-962, 10038</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0 longitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+          <td class="gedi_fillvalue">-999999.0</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">elevation_bin0</td>
+          <td class="gedi_dtype">FLOAT64<br>(MT)</td>
+          <td class="gedi_longname">Bounce elevation bin 0</td>
+          <td class="gedi_units">meters<br>Derived</td>
+          <td class="gedi_descript">Height of the start of the RX window, relative to the WGS-84 ellipsoid.  Includes corrections due to the range bias, atmospheric path delay, solid Earth tides, ocean loading, ocean pole tide, and solid Earth pole tide.</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0 longitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">elevation_bin0_error</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Bounce elevation bin 0 error</td>
+          <td class="gedi_units">meters<br>Derived</td>
+          <td class="gedi_descript">Error on elevation_bin0.</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0 longitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">elevation_lastbin</td>
+          <td class="gedi_dtype">FLOAT64<br>(MT)</td>
+          <td class="gedi_longname">Bounce elevation last bin</td>
+          <td class="gedi_units">meters<br>Derived</td>
+          <td class="gedi_descript">Height of the end of the RX window, relative to the WGS-84 ellipsoid.  Includes corrections due to the range bias, atmospheric path delay, solid Earth tides, ocean loading, ocean pole tide, and solid Earth pole tide.</td>
+          <td class="gedi_coordinates">delta_time latitude_lastbin longitude_lastbin</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">elevation_lastbin_error</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Bounce elevation last bin error</td>
+          <td class="gedi_units">meters<br>Derived</td>
+          <td class="gedi_descript">Error on elevation_lastbin.</td>
+          <td class="gedi_coordinates">delta_time latitude_lastbin longitude_lastbin</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">latitude_bin0</td>
+          <td class="gedi_dtype">FLOAT64<br>(MT)</td>
+          <td class="gedi_longname">Bounce latitude bin 0</td>
+          <td class="gedi_units">degrees<br>Derived</td>
+          <td class="gedi_descript">Latitude of the start of the RX window.</td>
+          <td class="gedi_validrange">-90, 90</td>
+          <td class="gedi_coordinates">delta_time longitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">latitude_bin0_error</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Bounce latitude bin 0 error</td>
+          <td class="gedi_units">degrees<br>Derived</td>
+          <td class="gedi_descript">Error on latitude_bin0.</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0 longitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">latitude_lastbin</td>
+          <td class="gedi_dtype">FLOAT64<br>(MT)</td>
+          <td class="gedi_longname">Bounce latitude last bin</td>
+          <td class="gedi_units">degrees<br>Derived</td>
+          <td class="gedi_descript">Latitude of the end of the RX window.</td>
+          <td class="gedi_validrange">-90, 90</td>
+          <td class="gedi_coordinates">delta_time longitude_lastbin</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">latitude_lastbin_error</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Bounce latitude last bin error</td>
+          <td class="gedi_units">degrees<br>Derived</td>
+          <td class="gedi_descript">Error on latitude_lastbin.</td>
+          <td class="gedi_coordinates">delta_time latitude_lastbin longitude_lastbin</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">latitude_instrument</td>
+          <td class="gedi_dtype">FLOAT64<br>(MT)</td>
+          <td class="gedi_longname">Instrument latitude</td>
+          <td class="gedi_units">degrees<br>Derived</td>
+          <td class="gedi_descript">Latitude of the instrument diffractive optical element (DOE) at laser transmit time.</td>
+          <td class="gedi_validrange">-90, 90</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">latitude_instrument_error</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Instrument latitude error</td>
+          <td class="gedi_units">degrees<br>Derived</td>
+          <td class="gedi_descript">Error on latitude_instrument.</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">local_beam_azimuth</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Local beam azimuth</td>
+          <td class="gedi_units">radians<br>Derived</td>
+          <td class="gedi_descript">Azimuth of the unit pointing vector for the laser in the local ENU frame. The angle is measured from North and positive towards East.</td>
+          <td class="gedi_validrange">-180, 180</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0 longitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">local_beam_azimuth_error</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Local beam azimuth error</td>
+          <td class="gedi_units">radians<br>Derived</td>
+          <td class="gedi_descript">Error on local_beam_azimuth.</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0 longitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">local_beam_elevation</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Local beam elevation</td>
+          <td class="gedi_units">radians<br>Derived</td>
+          <td class="gedi_descript">Elevation of the unit pointing vector for the laser in the local ENU frame. The angle is measured from East-North plane and positive towards Up.</td>
+          <td class="gedi_validrange">1.39626340159546, 1.57079632679490</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0 longitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">local_beam_elevation_error</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Local beam elevation error</td>
+          <td class="gedi_units">radians<br>Derived</td>
+          <td class="gedi_descript">Error on local_beam_elevation.</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0 longitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">longitude_bin0</td>
+          <td class="gedi_dtype">FLOAT64<br>(MT)</td>
+          <td class="gedi_longname">Bounce longitude bin 0</td>
+          <td class="gedi_units">degrees<br>Derived</td>
+          <td class="gedi_descript">Longitude of the start of the RX window.</td>
+          <td class="gedi_validrange">-180, 180</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">longitude_bin0_error</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Bounce longitude bin 0 error</td>
+          <td class="gedi_units">degrees<br>Derived</td>
+          <td class="gedi_descript">Error on longitude_bin0.</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0 longitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">longitude_lastbin</td>
+          <td class="gedi_dtype">FLOAT64<br>(MT)</td>
+          <td class="gedi_longname">Bounce longitude last bin</td>
+          <td class="gedi_units">degrees<br>Derived</td>
+          <td class="gedi_descript">Longitude of the end of the RX window.</td>
+          <td class="gedi_validrange">-180, 180</td>
+          <td class="gedi_coordinates">delta_time latitude_lastbin</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">longitude_lastbin_error</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Bounce longitude last bin error</td>
+          <td class="gedi_units">degrees<br>Derived</td>
+          <td class="gedi_descript">Error on longitude_lastbin.</td>
+          <td class="gedi_coordinates">delta_time latitude_lastbin longitude_lastbin</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">longitude_instrument</td>
+          <td class="gedi_dtype">FLOAT64<br>(MT)</td>
+          <td class="gedi_longname">Instrument longitude</td>
+          <td class="gedi_units">degrees<br>Derived</td>
+          <td class="gedi_descript">Longitude of the instrument diffractive optical element (DOE) at laser transmit time.</td>
+          <td class="gedi_validrange">-180, 180</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">longitude_instrument_error</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Instrument longitude error</td>
+          <td class="gedi_units">degrees<br>Derived</td>
+          <td class="gedi_descript">Error on longitude_instrument.</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">mean_sea_surface</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Mean sea surface</td>
+          <td class="gedi_units">meters<br>DTU15</td>
+          <td class="gedi_descript">Mean sea surface height above the WGS84 ellipsoid, includes the geoid.  Interpolated at latitude_bin0 and longitude_bin0 from DTU15.</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0 longitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">neutat_delay_derivative_bin0</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">(Neutral atmosphere delay)/dh bin 0</td>
+          <td class="gedi_units">meters/meter<br>Derived</td>
+          <td class="gedi_descript">Change in neutral atmospheric delay per height change for the start of the RX window.</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0 longitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">neutat_delay_derivative_lastbin</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">(Neutral atmosphere delay)/dh last bin</td>
+          <td class="gedi_units">meters/meter<br>Derived</td>
+          <td class="gedi_descript">Change in neutral atmospheric delay per height change for the end of the RX window.</td>
+          <td class="gedi_coordinates">delta_time latitude_lastbin longitude_lastbin</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">neutat_delay_total_bin0</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Total neutral atmospheric delay bin 0</td>
+          <td class="gedi_units">meters<br>Derived</td>
+          <td class="gedi_descript">Total neutral atmosphere delay correction (wet+dry) from the TX pulse to the start of the RX window (computed according to ICESat-2 ATL03A ATDB).  This value is subtracted from the range during geolocation.</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0 longitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">neutat_delay_total_lastbin</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Total neutral atmospheric delay last bin</td>
+          <td class="gedi_units">meters<br>Derived</td>
+          <td class="gedi_descript">Total neutral atmosphere delay correction (wet+dry) from the TX pulse to the end of the RX window (computed according to ICESat-2 ATL03A ATDB).  This value is subtracted from the range during geolocation.</td>
+          <td class="gedi_coordinates">delta_time latitude_lastbin longitude_lastbin</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">range_bias_correction</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Range bias correction</td>
+          <td class="gedi_units">meters<br>Derived</td>
+          <td class="gedi_descript">The range bias applied to the range measurement.  This value is subtracted from the range to get the corrected range.</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0 longitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">shot_number</td>
+          <td class="gedi_dtype">UINT64<br>(MT)</td>
+          <td class="gedi_longname">Shot number</td>
+          <td class="gedi_units">counter<br>Derived</td>
+          <td class="gedi_descript">Unique shot ID.</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0 longitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">solar_azimuth</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Solar azimuth</td>
+          <td class="gedi_units">degrees<br>Derived</td>
+          <td class="gedi_descript">The azimuth of the sun position vector from the laser bounce point position in the local ENU frame. The angle is measured from North and is positive towards East.</td>
+          <td class="gedi_validrange">-180, 180</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0 longitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">solar_elevation</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Solar elevation</td>
+          <td class="gedi_units">degrees<br>Derived</td>
+          <td class="gedi_descript">The elevation of the sun position vector from the laser bounce point position in the local ENU frame. The angle is measured from the East-North plane and is positive Up.</td>
+          <td class="gedi_validrange">-90, 90</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0 longitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">surface_type</td>
+          <td class="gedi_dtype">INT8<br>(5,MT)</td>
+          <td class="gedi_longname">Surface type</td>
+          <td class="gedi_units">boolean<br>ICESat-2 surface type mask</td>
+          <td class="gedi_descript">Flags describing which surface types this interval is associated with. 0=not type, 1=is type. Order of array is land, ocean, sea ice, land ice, inland water.</td>
+          <td class="gedi_validrange">0, 1</td>
+          <td class="gedi_coordinates">delta_time latitude_bin0 longitude_bin0</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+
+        <tr>
+          <td class="gedi_group" colspan="5">Group: /BEAMXXXX/geophys_corr</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">description</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">Geophysical corrections</td>
+          <td class="gedi_attribute_value">${DESCRIPTION}</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">vegas_githash</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">Git commit hash of the VEGAS software used to create the L1B file</td>
+        </tr>
+        <tr>
+          <td class="gedi_attribute_name">vegas_version</td>
+          <td class="gedi_attribute_type">(Attribute)</td>
+          <td class="gedi_attribute_descript" colspan="3">Version number of the VEGAS software used to create the L1B file</td>
+        </tr>
+        <tr>
+          <td class="gedi_header">Label</td>
+          <td class="gedi_header">Datatype<br>(Dimensions)</td>
+          <td class="gedi_header">long_name</td>
+          <td class="gedi_header">units<br>source</td>
+          <td class="gedi_header">description</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">delta_time</td>
+          <td class="gedi_dtype">FLOAT64<br>(MT)</td>
+          <td class="gedi_longname">Delta time</td>
+          <td class="gedi_units">seconds since 2018-01-01<br>Derived</td>
+          <td class="gedi_descript">Transmit time of the shot, measured in seconds from the master_time_epoch.  By adding the offset contained within /BEAMXXXX/ancillary/master_time_epoch to delta_time, the time in GPS seconds relative to the GPS epoch can be computed.  Equivalent to /BEAMXXXX/master_int+/BEAMXXXX/master_frac.</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">dynamic_atmosphere_correction</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Dynamic atmosphere correction</td>
+          <td class="gedi_units">meters<br>MOG2D</td>
+          <td class="gedi_descript">Dynamic Atmospheric Correction (DAC) includes inverted barometer (IB) effect.</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">geoid</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Geoid</td>
+          <td class="gedi_units">meters<br>Derived from EGM2008</td>
+          <td class="gedi_descript">Geoid height above WGS-84 reference ellipsoid (range -107 to 86m). Not applied on the product.</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">tide_earth</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Earth tide</td>
+          <td class="gedi_units">meters<br>IERS conventions (2010)</td>
+          <td class="gedi_descript">Solid Earth tides</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">tide_load</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Load tide</td>
+          <td class="gedi_units">meters<br>GOT 4.8</td>
+          <td class="gedi_descript">Load Tide - Local displacement due to Ocean Loading (-6 to 0 cm).</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">tide_ocean</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Ocean tide</td>
+          <td class="gedi_units">meters<br>GOT 4.8</td>
+          <td class="gedi_descript">Ocean Tides including diurnal and semi-diurnal (harmonic analysis), and longer period tides (dynamic and self-consistent equilibrium).</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">tide_ocean_pole</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Ocean pole tide</td>
+          <td class="gedi_units">meters<br>IERS conventions (2010)</td>
+          <td class="gedi_descript">Oceanic surface rotational deformation due to polar motion (-2 to 2 mm).</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+        <tr>
+          <td class="gedi_label">tide_pole</td>
+          <td class="gedi_dtype">FLOAT32<br>(MT)</td>
+          <td class="gedi_longname">Solid earth pole tide</td>
+          <td class="gedi_units">meters<br>IERS conventions (2010)</td>
+          <td class="gedi_descript">Solid Earth Pole Tide -- Rotational deformation due to polar motion (-1.5 to 1.5 cm).</td>
+          <td class="gedi_dimensions">delta_time</td>
+        </tr>
+      </tbody></table>
+    </div>
+  
+
+<iframe id="S2Rgta68" frameborder="0" src="./GEDI L1B Product Data Dictionary_files/translateSandbox.html" style="width: 0px; height: 0px; display: none;"></iframe><div id="visualsp-iframe-container" class="visualsp-iframe-pos-right visualSPElementSelector_ignore"><iframe id="visualsp-iframe" allow="autoplay; fullscreen" frameborder="0" src="./GEDI L1B Product Data Dictionary_files/helpitems.html" class="visualSPElementSelector_ignore"></iframe></div><div unselectable="on" class="visualsp-handle-showcount visualsp-handle-pos-bottom visualSPElementSelector_ignore" id="visualsp-handle" style="display: none; user-select: none;"><div class="visualsp-handle-text visualsp-css-reset visualSPElementSelector_ignore">Need Help?</div><div class="visualsp-handle-badge visualSPElementSelector_ignore">0</div></div></body></html>
