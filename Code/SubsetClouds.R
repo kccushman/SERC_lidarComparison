@@ -3,7 +3,7 @@
 library("lidR")
 
 # NOTE: before running this section, download ha 4 data from the following Google Drive link:
-# 
+# https://drive.google.com/drive/folders/1zTAWz94pnOWlbFfPlgONtNq5IFj58dgW?usp=sharing
 # and unzip the "TLS" folder
 
 # Define file path for MLS, ALS, and uls lidar files
