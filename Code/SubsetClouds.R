@@ -7,11 +7,11 @@ library("lidR")
 # and unzip the "TLS" folder
 
 # Define file path for MLS, ALS, and uls lidar files
-  mlsFile <- "Data/ha4/mls_ha4.laz"
-  alsFile <- "Data/ha4/als_ha4.laz"
-  ulsFile <- "Data/ha4/drone_ha4.laz"
-  ulsOffFile <- "Data/ha4/drone_leafoff_ha4.las"
-  tlsFile <- "Data/ha4/TLS/"
+  mlsFile <- "Data/ha4_data/mls_ha4.laz"
+  alsFile <- "Data/ha4_data/als_ha4.laz"
+  ulsFile <- "Data/ha4_data/drone_ha4.laz"
+  ulsOffFile <- "Data/ha4_data/drone_leafoff_ha4.las"
+  tlsFile <- "Data/ha4_data/TLS/"
   
 # Make lidR catalog objects
   mlsCat <- catalog(mlsFile)

@@ -8,18 +8,20 @@ library("terra")
   mlsFile <- "Data/transect/transect_mls.laz"
   alsFile <- "Data/transect/transect_als.laz"
   droneFile <- "Data/transect/transect_drone.laz"
+  droneFile_leafOff <- "Data/transect/transect_drone_leafoff.laz"
   tlsFile <- "Data/transect/tls/"
   
   # Make lidR catalog objects
   mlsCat <- catalog(mlsFile)
   alsCat <- catalog(alsFile)
   droneCat <- catalog(droneFile)
+  droneCat_leafOff <- catalog(droneFile_leafOff)
   tlsCat <- catalog(tlsFile)
 
 #### make terrain model ####
 
   # use previously classified ALS data for entire ha 4
-  alsAll <- catalog("Data/ha4/als_ha4.laz")
+  alsAll <- catalog("Data/ha4_data/als_ha4.laz")
   dtm <- rasterize_terrain(alsAll, res = 1, algorithm = knnidw(k = 6L, p = 2))
 
 #### Calculate summary stats of transects ####
@@ -341,7 +343,7 @@ library("terra")
      # calculate % variation in mean LAI
      round(100*(max(transectSummary$meanLAI)-min(transectSummary$meanLAI))/min(transectSummary$meanLAI),1)
       
-#### Point cloud plots ####
+#### Point cloud plot: four discrete return platforms, leaf-on ####
      
 jpeg(filename = "Results/PointCloudPlot.jpeg",
      width = 1800, height = 1200, units = "px", pointsize = 36,
@@ -414,7 +416,7 @@ jpeg(filename = "Results/PointCloudPlot.jpeg",
 dev.off()  
   
   
-#### Trunk cross section plots ####
+#### Point cloud plot: trunk cross section ####
 
 # These point clouds were manually subsetted in CloudCompare and saved as
 # separate .laz files for ease of plotting
@@ -474,6 +476,43 @@ jpeg(filename = "Results/TrunkPlot.jpeg",
   
 dev.off()
 
+
+#### Point cloud plot: drone lidar, leaf-on vs leaf-off ####
+
+jpeg(filename = "Results/DroneLeafOnOffComparison.jpeg",
+     width = 1800, height = 600, units = "px", pointsize = 36,
+     quality = 300)
+
+par(mfrow=c(1,2), oma=c(4,4,1,1), las=1, mar=c(1,1,1,0))
+ptCex <- 0.05      
+
+#Drone: leaf on   
+data <- readLAS(droneFile)   
+dataNorm <- normalize_height(data, dtm)
+plot(x=dataNorm$X- 364560,y=dataNorm$Z,
+     cex=ptCex,
+     pch=19,
+     col = adjustcolor("black",0.5),
+     ylim=c(0,45),
+     ylab=NA,
+     asp=1,
+     axes=F)
+mtext("Growing season",side=3,line=-1,outer=F)
+
+#Drone: leaf off   
+data <- readLAS(droneFile_leafOff)   
+dataNorm <- normalize_height(data, dtm)
+plot(x=dataNorm$X- 364560,y=dataNorm$Z,
+     cex=ptCex,
+     pch=19,
+     col = adjustcolor("black",0.5),
+     ylim=c(0,45),
+     ylab=NA,
+     asp=1,
+     axes=F)
+mtext("Leaf off conditions",side=3,line=-1,outer=F)
+
+dev.off()  
 
 #### Rasterized metric plots ####
   
