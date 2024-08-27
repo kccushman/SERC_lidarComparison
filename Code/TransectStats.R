@@ -133,7 +133,7 @@ library("terra")
                                geom=c("X", "Z"))
         paiRast_als <- terra::rasterize(pai_als_vect,rastTemplate, field="ePAI")
       
-### Drone
+### Drone - leaf on 
       
       # read lidar data
       data <- readLAS(droneFile)
@@ -187,7 +187,35 @@ library("terra")
                              geom=c("X", "Z"))
         paiRast_drone <- terra::rasterize(pai_drone_vect,rastTemplate, field="ePAI")
       
-
+### Drone - leaf off 
+        
+        # read lidar data
+        data <- readLAS(droneFile_leafOff)
+        # subtract ground height
+        dataNorm <- normalize_height(data, dtm)
+        
+    # 2D POINT DENSITY
+        # calculate voxel point density
+        voxel_droneLO <- voxel_metrics(dataNorm, ~list(N = length(Z)), 5, all_voxels = T)
+        # replace "NA" values with 0
+        voxel_droneLO[is.na(voxel_droneLO$N),"N"] <- 0
+        # creates 2 "layers", recombine into one
+        voxel_droneLO <- aggregate(N~X+Z, data = voxel_droneLO, sum)
+        # scale to pts/m3
+        voxel_droneLO$pts_m3 <- voxel_droneLO$N/25
+        # rescale X values
+        voxel_droneLO$Xplot <- voxel_droneLO$X - 364560
+        voxel_droneLO$Yplot <- voxel_droneLO$Z + 2.5
+        voxel_droneLO_vect <- vect(voxel_droneLO,
+                                 geom=c("Xplot", "Yplot"))
+        densRast_droneLO <- terra::rasterize(voxel_droneLO_vect,rastTemplate, field="pts_m3")
+        
+    # CANOPY HEIGHT
+        chm_droneLO <- rasterize_canopy(dataNorm, res=0.25,
+                                      algorithm = p2r(subcircle=0.01))
+        
+  # Don't calculate ePAI for leaf-off data
+        
 ### MLS
       
       # read lidar data
@@ -300,7 +328,8 @@ library("terra")
 #### Make table of summary stats ####
       
   transectSummary <- data.frame(instrument = c("Airplane lidar",
-                                               "Drone lidar",
+                                               "Drone lidar (leaf on)",
+                                               "Drone lidar (leaf off)",
                                                "Mobile lidar",
                                                "Terrestrial lidar"),
                                 pointDensity = NA,
@@ -314,34 +343,43 @@ library("terra")
       transectSummary$canopyRugosity[1] <- round(sd(aggregate(ePAI_als$ePAI, by=list(ePAI_als$X), FUN="sd")[,2]),2)
       transectSummary$meanLAI[1] <- round(mean(aggregate(ePAI_als$ePAI, by=list(ePAI_als$X), FUN="sum")[,2]),2)
      
-  # Drone
+  # Drone - leaf on
       transectSummary$pointDensity[2] <- round(droneCat$Number.of.point.records/(80*5))
       transectSummary$meanCanopyHeight[2] <- round(mean(values(chm_drone),na.rm=T),1)
       transectSummary$canopyRugosity[2] <- round(sd(aggregate(ePAI_drone$ePAI, by=list(ePAI_drone$X), FUN="sd")[,2]),2)
       transectSummary$meanLAI[2] <- round(mean(aggregate(ePAI_drone$ePAI, by=list(ePAI_drone$X), FUN="sum")[,2]),2)
-   
+    
+  # Drone - leaf off
+      transectSummary$pointDensity[3] <- round(droneCat_leafOff$Number.of.point.records/(80*5))
+      transectSummary$meanCanopyHeight[3] <- round(mean(values(chm_droneLO),na.rm=T),1)
+      transectSummary$canopyRugosity[3] <- "--"
+      transectSummary$meanLAI[3] <- "--" 
   # Mobile
-      transectSummary$pointDensity[3] <- round(mlsCat$Number.of.point.records/(80*5))
-      transectSummary$meanCanopyHeight[3] <- round(mean(values(chm_mls),na.rm=T),1)
-      transectSummary$canopyRugosity[3] <- round(sd(aggregate(ePAI_mls$ePAI, by=list(ePAI_mls$X), FUN="sd")[,2]),2)
-      transectSummary$meanLAI[3] <- round(mean(aggregate(ePAI_mls$ePAI, by=list(ePAI_mls$X), FUN="sum")[,2]),2)
+      transectSummary$pointDensity[4] <- round(mlsCat$Number.of.point.records/(80*5))
+      transectSummary$meanCanopyHeight[4] <- round(mean(values(chm_mls),na.rm=T),1)
+      transectSummary$canopyRugosity[4] <- round(sd(aggregate(ePAI_mls$ePAI, by=list(ePAI_mls$X), FUN="sd")[,2]),2)
+      transectSummary$meanLAI[4] <- round(mean(aggregate(ePAI_mls$ePAI, by=list(ePAI_mls$X), FUN="sum")[,2]),2)
       
   # TLS
-      transectSummary$pointDensity[4] <- round(sum(tlsCat$Number.of.point.records)/(80*5))
-      transectSummary$meanCanopyHeight[4] <- round(mean(values(chm_tls),na.rm=T),1)
-      transectSummary$canopyRugosity[4] <- round(sd(aggregate(ePAI_tls$ePAI, by=list(ePAI_tls$X), FUN="sd")[,2]),2)
-      transectSummary$meanLAI[4] <- round(mean(aggregate(ePAI_tls$ePAI, by=list(ePAI_tls$X), FUN="sum")[,2]),2)
+      transectSummary$pointDensity[5] <- round(sum(tlsCat$Number.of.point.records)/(80*5))
+      transectSummary$meanCanopyHeight[5] <- round(mean(values(chm_tls),na.rm=T),1)
+      transectSummary$canopyRugosity[5] <- round(sd(aggregate(ePAI_tls$ePAI, by=list(ePAI_tls$X), FUN="sd")[,2]),2)
+      transectSummary$meanLAI[5] <- round(mean(aggregate(ePAI_tls$ePAI, by=list(ePAI_tls$X), FUN="sum")[,2]),2)
       
       write.csv(transectSummary,"Results/transectSummaryStats.csv",row.names = F)
+      
+      
+      transectSummary$canopyRugosity <- as.numeric(transectSummary$canopyRugosity)
+      transectSummary$meanLAI <- as.numeric(transectSummary$meanLAI)
       
      # calculate % variation in mean canopy height
      round(100*(max(transectSummary$meanCanopyHeight)-min(transectSummary$meanCanopyHeight))/min(transectSummary$meanCanopyHeight),1)
       
      # calculate % variation in canopy rugosity
-     round(100*(max(transectSummary$canopyRugosity)-min(transectSummary$canopyRugosity))/min(transectSummary$canopyRugosity),1)
+     round(100*(max(transectSummary$canopyRugosity,na.rm=T)-min(transectSummary$canopyRugosity,na.rm=T))/min(transectSummary$canopyRugosity,na.rm=T),1)
      
      # calculate % variation in mean LAI
-     round(100*(max(transectSummary$meanLAI)-min(transectSummary$meanLAI))/min(transectSummary$meanLAI),1)
+     round(100*(max(transectSummary$meanLAI,na.rm=T)-min(transectSummary$meanLAI,na.rm=T))/min(transectSummary$meanLAI,na.rm=T),1)
       
 #### Point cloud plot: four discrete return platforms, leaf-on ####
      
