@@ -374,14 +374,17 @@ library("terra")
       
      # calculate % variation in mean canopy height
      round(100*(max(transectSummary$meanCanopyHeight)-min(transectSummary$meanCanopyHeight))/min(transectSummary$meanCanopyHeight),1)
-      
-     # calculate % variation in canopy rugosity
-     round(100*(max(transectSummary$canopyRugosity,na.rm=T)-min(transectSummary$canopyRugosity,na.rm=T))/min(transectSummary$canopyRugosity,na.rm=T),1)
+     # not inlcuding leaf-off ULS
+     round(100*(max(transectSummary$meanCanopyHeight[-3])-min(transectSummary$meanCanopyHeight[-3]))/min(transectSummary$meanCanopyHeight[-3]),1)
      
      # calculate % variation in mean LAI
      round(100*(max(transectSummary$meanLAI,na.rm=T)-min(transectSummary$meanLAI,na.rm=T))/min(transectSummary$meanLAI,na.rm=T),1)
-      
-#### Point cloud plot: four discrete return platforms, leaf-on ####
+     
+     # calculate % variation in canopy rugosity
+     round(100*(max(transectSummary$canopyRugosity,na.rm=T)-min(transectSummary$canopyRugosity,na.rm=T))/min(transectSummary$canopyRugosity,na.rm=T),1)
+     
+
+#### Figure 2. Point cloud plot: four discrete return platforms, leaf-on ####
      
 jpeg(filename = "Results/PointCloudPlot.jpeg",
      width = 1800, height = 1200, units = "px", pointsize = 36,
@@ -401,7 +404,8 @@ jpeg(filename = "Results/PointCloudPlot.jpeg",
            ylab=NA,
            asp=1,
            axes=F)
-      mtext("Airborne lidar",side=3,line=-1,outer=F)
+      mtext("a. ALS",side=3,line=-1,outer=F)
+      #text("a", x = 2.5, y = 45)
       axis(side=2,at=seq(0,45,5),pos=-1)
       
     
@@ -416,8 +420,9 @@ jpeg(filename = "Results/PointCloudPlot.jpeg",
          ylab=NA,
          asp=1,
          axes=F)
-    mtext("Drone lidar",side=3,line=-1,outer=F)
-
+    mtext("b. ULS",side=3,line=-1,outer=F)
+    #text("b", x = 2.5, y = 45)
+    
     #MLS   
     data <- readLAS(mlsFile)   
     dataNorm <- normalize_height(data, dtm)
@@ -429,7 +434,8 @@ jpeg(filename = "Results/PointCloudPlot.jpeg",
          ylab=NA,
          asp=1,
          axes=F)
-    mtext("Mobile lidar",side=3,line=-1,outer=F)
+    mtext("c. MLS",side=3,line=-1,outer=F)
+    #text("c", x = 2.5, y = 45)
     axis(side=2,at=seq(0,45,5),pos=-1)
     axis(side=1,at=seq(0,80,5),pos=-1)
     
@@ -444,17 +450,174 @@ jpeg(filename = "Results/PointCloudPlot.jpeg",
          ylab=NA,
          asp=1,
          axes=F)
-    mtext("Terrestrial lidar",side=3,line=-1,outer=F)
+    mtext("d. TLS",side=3,line=-1,outer=F)
+    #text("d", x = 2.5, y = 45)
     axis(side=1,at=seq(0,80,5),pos=-1)
     
     mtext("Ground distance (m)",side=1,line=1,outer=T)
     mtext("Height (m)",side=2,line=1,outer=T,las=0)
     
-    
 dev.off()  
   
   
-#### Point cloud plot: trunk cross section ####
+#### Figure 3. Rasterized metric plots ####
+
+densRange <- range(values(densRast_als),
+                   values(densRast_drone),
+                   values(densRast_mls),
+                   values(densRast_tls))
+densBreaks <- c(0,1e-8,1,10,20,40,80,160,320,640,1000,10000,densRange[2])
+paiRange <- range(values(paiRast_als),
+                  values(paiRast_drone),
+                  values(paiRast_mls),
+                  values(paiRast_tls))
+paiBreaks <- c(0,1e-8,0.25,0.5,1:5,paiRange[2])
+cexLab <- 1.4
+cexLetter <- 2
+
+jpeg(filename = "Results/VoxelMetricsPlot.jpeg",
+     width = 2400, height = 3000, units = "px", pointsize = 36,
+     quality = 300)
+
+par(mfrow=c(4,2),las=1, mar=c(2,2,1,1), oma=c(4,4,10,1), xpd=T)
+
+terra::plot(densRast_als,
+            breaks= densBreaks,
+            col = c("white",viridisLite::plasma(length(densBreaks)-2)),
+            decreasing=F,
+            box=F,
+            las=1,
+            axes=F,
+            legend=F)
+axis(side=1, at=seq(0,80,5), pos=0,
+     labels=F)
+axis(side=2, at=seq(0,45,5), pos=0,
+     labels=T)
+legend(x = -10, y = 60, bty="n",
+       c("0", "< 1", "1 - 10", "10 - 20","20 - 40","40 - 80",
+         "80 - 160","160 - 320","320 - 640","640 - 1,000","1,000 - 10,000", "> 10,000"),
+       x.intersp = 0.2,
+       fill = c("white",viridisLite::plasma(length(densBreaks)-2)),
+       xpd=NA,ncol=4,
+       cex=1.5)
+mtext("Point density (points/m3)",side=3,line=8,outer=F, cex = cexLab)
+mtext("ALS",side=2,line=1,outer=F, las=0)
+text("a", x = 2.5, y = 42.5, cex = cexLetter)
+
+terra::plot(paiRast_als,
+            breaks= paiBreaks,
+            col = c("white",viridisLite::viridis(length(paiBreaks)-2)),
+            decreasing=F,
+            box=F,
+            las=1,
+            axes=F,
+            legend=F)
+axis(side=1, at=seq(0,80,5), pos=0,
+     labels=F)
+axis(side=2, at=seq(0,45,5), pos=0,
+     labels=F)
+legend(x = 0, y = 60, bty="n",
+       c("0", "< 0.25", "0.25 - 0.5", "0.5 - 1","1 - 2","2 - 3",
+         "3 - 4","4 - 5",">5"),
+       x.intersp = 0.2,
+       fill = c("white",viridisLite::viridis(length(paiBreaks)-2)),
+       xpd=NA,ncol=4,
+       cex=1.5)
+mtext("Effective PAI (m2/m2)",side=3,line=8,outer=F, cex = cexLab)
+text("b", x = 2.5, y = 42.5, cex = cexLetter)
+
+terra::plot(densRast_drone,
+            breaks= densBreaks,
+            col = c("white",viridisLite::plasma(length(densBreaks)-2)),
+            decreasing=F,
+            box=F,
+            las=1,
+            axes=F,
+            legend=F)
+axis(side=1, at=seq(0,80,5), pos=0,
+     labels=F)
+axis(side=2, at=seq(0,45,5), pos=0,
+     labels=T)
+mtext("ULS",side=2,line=1,outer=F, las=0)
+text("c", x = 2.5, y = 42.5, cex = cexLetter)
+
+terra::plot(paiRast_drone,
+            breaks= paiBreaks,
+            col = c("white",viridisLite::viridis(length(paiBreaks)-2)),
+            decreasing=F,
+            box=F,
+            las=1,
+            axes=F,
+            legend=F)
+axis(side=1, at=seq(0,80,5), pos=0,
+     labels=F)
+axis(side=2, at=seq(0,45,5), pos=0,
+     labels=F)
+text("d", x = 2.5, y = 42.5, cex = cexLetter)
+
+terra::plot(densRast_mls,
+            breaks= densBreaks,
+            col = c("white",viridisLite::plasma(length(densBreaks)-2)),
+            decreasing=F,
+            box=F,
+            las=1,
+            axes=F,
+            legend=F)
+axis(side=1, at=seq(0,80,5), pos=0,
+     labels=F)
+axis(side=2, at=seq(0,45,5), pos=0,
+     labels=T)
+mtext("MLS",side=2,line=1,outer=F, las=0)
+text("e", x = 2.5, y = 42.5, cex = cexLetter)
+
+terra::plot(paiRast_mls,
+            breaks= paiBreaks,
+            col = c("white",viridisLite::viridis(length(paiBreaks)-2)),
+            decreasing=F,
+            box=F,
+            las=1,
+            axes=F,
+            legend=F)
+axis(side=1, at=seq(0,80,5), pos=0,
+     labels=F)
+axis(side=2, at=seq(0,45,5), pos=0,
+     labels=F)
+text("f", x = 2.5, y = 42.5, cex = cexLetter)
+
+terra::plot(densRast_tls,
+            breaks= densBreaks,
+            col = c("white",viridisLite::plasma(length(densBreaks)-2)),
+            decreasing=F,
+            box=F,
+            las=1,
+            axes=F,
+            legend=F)
+axis(side=1, at=seq(0,80,5), pos=0,
+     labels=T)
+axis(side=2, at=seq(0,45,5), pos=0,
+     labels=T)
+mtext("TLS",side=2,line=1,outer=F, las=0)
+text("g", x = 2.5, y = 42.5, cex = cexLetter)
+
+terra::plot(paiRast_tls,
+            breaks= paiBreaks,
+            col = c("white",viridisLite::viridis(length(paiBreaks)-2)),
+            decreasing=F,
+            box=F,
+            las=1,
+            axes=F,
+            legend=F)
+axis(side=1, at=seq(0,80,5), pos=0,
+     labels=T)
+axis(side=2, at=seq(0,45,5), pos=0,
+     labels=F)
+mtext("Ground distance (m)",side=1,line=1,outer=T, cex = cexLab)
+mtext("Height (m)",side=2,line=1,outer=T,las=0, cex = cexLab)
+text("h", x = 2.5, y = 42.5, cex = cexLetter)
+
+dev.off()  
+
+#### Figure 4. Point cloud plot: trunk cross section ####
 
 # These point clouds were manually subsetted in CloudCompare and saved as
 # separate .laz files for ease of plotting
@@ -473,7 +636,7 @@ jpeg(filename = "Results/TrunkPlot.jpeg",
      width = 1200, height = 500, units = "px", pointsize = 36,
      quality = 300)
 
-  par(mfrow=c(2,2), mar=c(1,1,1,1),oma=c(2,2,2,2))
+  par(mfrow=c(1,3), mar=c(1,1,1,1),oma=c(2,2,2,2))
   
   plot(x = trunkTLS$X[trunkTLS$Z>zMin & trunkTLS$Z<zMax],
        y = trunkTLS$Y[trunkTLS$Z>zMin & trunkTLS$Z<zMax],
@@ -484,7 +647,9 @@ jpeg(filename = "Results/TrunkPlot.jpeg",
        axes=F,ylab=NA,xlab=NA,
        col = adjustcolor("black",0.5),
        asp=1)
-  mtext("Terrestrial lidar",side=3,line=-1,outer=F)
+  mtext("a. TLS",side=3,line=-1,outer=F)
+  #text("a", x= xRange[1], y = yRange[2])
+  
   lines(x=c(364623.6,364623.8),
         y=c(4305790.9,4305790.9),
         lwd=2)
@@ -499,7 +664,8 @@ jpeg(filename = "Results/TrunkPlot.jpeg",
        axes=F,ylab=NA,xlab=NA,
        col = adjustcolor("black",0.5),
        asp=1)
-  mtext("Mobile lidar",side=3,line=-1,outer=F)
+  mtext("b. MLS",side=3,line=-1,outer=F)
+  #text("b", x= xRange[1], y = yRange[2])
   
   plot(x = trunkDrone$X[trunkDrone$Z>zMin & trunkDrone$Z<zMax],
        y = trunkDrone$Y[trunkDrone$Z>zMin & trunkDrone$Z<zMax],
@@ -510,18 +676,20 @@ jpeg(filename = "Results/TrunkPlot.jpeg",
        axes=F,ylab=NA,xlab=NA,
        col = adjustcolor("black",0.5),
        asp=1)
-  mtext("Drone lidar",side=3,line=-1,outer=F)
+  mtext("c. ULS (leaf off)",side=3,line=-1,outer=F)
+  #text("c", x= xRange[1], y = yRange[2])
   
 dev.off()
 
 
-#### Point cloud plot: drone lidar, leaf-on vs leaf-off ####
+#### Figures 5 and 6 are in GEDI_analyzeData.R #### 
+#### Figure S2. Point cloud plot: drone lidar, leaf-on vs leaf-off ####
 
 jpeg(filename = "Results/DroneLeafOnOffComparison.jpeg",
-     width = 1800, height = 600, units = "px", pointsize = 36,
+     width = 1800, height = 750, units = "px", pointsize = 36,
      quality = 300)
 
-par(mfrow=c(1,2), oma=c(4,4,1,1), las=1, mar=c(1,1,1,0))
+par(mfrow=c(1,2), oma=c(2,2,1,1), las=1, mar=c(1,1,1,0))
 ptCex <- 0.05      
 
 #Drone: leaf on   
@@ -535,7 +703,9 @@ plot(x=dataNorm$X- 364560,y=dataNorm$Z,
      ylab=NA,
      asp=1,
      axes=F)
-mtext("Growing season",side=3,line=-1,outer=F)
+mtext("a. Leaf on (growing season)",side=3,line=-1,outer=F)
+axis(side=2,at=seq(0,45,5),pos=-1)
+axis(side=1,at=seq(0,80,5),pos=-1)
 
 #Drone: leaf off   
 data <- readLAS(droneFile_leafOff)   
@@ -548,152 +718,10 @@ plot(x=dataNorm$X- 364560,y=dataNorm$Z,
      ylab=NA,
      asp=1,
      axes=F)
-mtext("Leaf off conditions",side=3,line=-1,outer=F)
+mtext("b. Leaf off",side=3,line=-1,outer=F)
+axis(side=1,at=seq(0,80,5),pos=-1)
 
+mtext("Ground distance (m)",side=1,line=1,outer=T)
+mtext("Height (m)",side=2,line=1,outer=T,las=0)
 dev.off()  
 
-#### Rasterized metric plots ####
-  
-  densRange <- range(values(densRast_als),
-                     values(densRast_drone),
-                     values(densRast_mls),
-                     values(densRast_tls))
-  densBreaks <- c(0,1e-8,1,10,20,40,80,160,320,640,1000,10000,densRange[2])
-  paiRange <- range(values(paiRast_als),
-                     values(paiRast_drone),
-                     values(paiRast_mls),
-                     values(paiRast_tls))
-  paiBreaks <- c(0,1e-8,0.25,0.5,1:5,paiRange[2])
-  cexLab <- 1.2
-  
-jpeg(filename = "Results/VoxelMetricsPlot.jpeg",
-     width = 2400, height = 3000, units = "px", pointsize = 36,
-     quality = 300)
-  
-  par(mfrow=c(4,2),las=1, mar=c(2,2,1,1), oma=c(4,4,10,1), xpd=T)
-  
-  terra::plot(densRast_als,
-       breaks= densBreaks,
-       col = c("white",viridisLite::plasma(length(densBreaks)-2)),
-       decreasing=F,
-       box=F,
-       las=1,
-       axes=F,
-       legend=F)
-  axis(side=1, at=seq(0,80,5), pos=0,
-       labels=F)
-  axis(side=2, at=seq(0,45,5), pos=0,
-       labels=T)
-  legend(x = -10, y = 60, bty="n",
-         c("0", "< 1", "1 - 10", "10 - 20","20 - 40","40 - 80",
-           "80 - 160","160 - 320","320 - 640","640 - 1,000","1,000 - 10,000", "> 10,000"),
-         x.intersp = 0.2,
-         fill = c("white",viridisLite::plasma(length(densBreaks)-2)),
-         xpd=NA,ncol=4,
-         cex=1.5)
-  mtext("Point density (points/m3)",side=3,line=8,outer=F, cex = cexLab)
-  mtext("Airborne lidar",side=2,line=1,outer=F, las=0)
-  terra::plot(paiRast_als,
-              breaks= paiBreaks,
-              col = c("white",viridisLite::viridis(length(paiBreaks)-2)),
-              decreasing=F,
-              box=F,
-              las=1,
-              axes=F,
-              legend=F)
-  axis(side=1, at=seq(0,80,5), pos=0,
-       labels=F)
-  axis(side=2, at=seq(0,45,5), pos=0,
-       labels=F)
-  legend(x = 0, y = 60, bty="n",
-         c("0", "< 0.25", "0.25 - 0.5", "0.5 - 1","1 - 2","2 - 3",
-           "3 - 4","4 - 5",">5"),
-         x.intersp = 0.2,
-         fill = c("white",viridisLite::viridis(length(paiBreaks)-2)),
-         xpd=NA,ncol=4,
-         cex=1.5)
-  mtext("Effective PAI (m2/m2)",side=3,line=8,outer=F, cex = cexLab)
-  
-  terra::plot(densRast_drone,
-              breaks= densBreaks,
-              col = c("white",viridisLite::plasma(length(densBreaks)-2)),
-              decreasing=F,
-              box=F,
-              las=1,
-              axes=F,
-              legend=F)
-  axis(side=1, at=seq(0,80,5), pos=0,
-       labels=F)
-  axis(side=2, at=seq(0,45,5), pos=0,
-       labels=T)
-  mtext("Drone lidar",side=2,line=1,outer=F, las=0)
-  terra::plot(paiRast_drone,
-              breaks= paiBreaks,
-              col = c("white",viridisLite::viridis(length(paiBreaks)-2)),
-              decreasing=F,
-              box=F,
-              las=1,
-              axes=F,
-              legend=F)
-  axis(side=1, at=seq(0,80,5), pos=0,
-       labels=F)
-  axis(side=2, at=seq(0,45,5), pos=0,
-       labels=F)
-  
-  terra::plot(densRast_mls,
-              breaks= densBreaks,
-              col = c("white",viridisLite::plasma(length(densBreaks)-2)),
-              decreasing=F,
-              box=F,
-              las=1,
-              axes=F,
-              legend=F)
-  axis(side=1, at=seq(0,80,5), pos=0,
-       labels=F)
-  axis(side=2, at=seq(0,45,5), pos=0,
-       labels=T)
-  mtext("Mobile lidar",side=2,line=1,outer=F, las=0)
-  terra::plot(paiRast_mls,
-              breaks= paiBreaks,
-              col = c("white",viridisLite::viridis(length(paiBreaks)-2)),
-              decreasing=F,
-              box=F,
-              las=1,
-              axes=F,
-              legend=F)
-  axis(side=1, at=seq(0,80,5), pos=0,
-       labels=F)
-  axis(side=2, at=seq(0,45,5), pos=0,
-       labels=F)
-  
-  terra::plot(densRast_tls,
-              breaks= densBreaks,
-              col = c("white",viridisLite::plasma(length(densBreaks)-2)),
-              decreasing=F,
-              box=F,
-              las=1,
-              axes=F,
-              legend=F)
-  axis(side=1, at=seq(0,80,5), pos=0,
-       labels=T)
-  axis(side=2, at=seq(0,45,5), pos=0,
-       labels=T)
-  mtext("Terrestrial lidar",side=2,line=1,outer=F, las=0)
-
-  terra::plot(paiRast_tls,
-              breaks= paiBreaks,
-              col = c("white",viridisLite::viridis(length(paiBreaks)-2)),
-              decreasing=F,
-              box=F,
-              las=1,
-              axes=F,
-              legend=F)
-  axis(side=1, at=seq(0,80,5), pos=0,
-       labels=T)
-  axis(side=2, at=seq(0,45,5), pos=0,
-       labels=F)
-  mtext("Ground distance (m)",side=1,line=1,outer=T, cex = cexLab)
-  mtext("Height (m)",side=2,line=1,outer=T,las=0, cex = cexLab)
-  
-dev.off()  
-  

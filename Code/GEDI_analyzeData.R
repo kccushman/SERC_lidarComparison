@@ -44,13 +44,13 @@ library(terra); library(lidR); library(sf); library(rGEDI)
   }
   
   
-#### plot data availability ####
+#### Figure 5. plot of data availability ####
   
   # turn GEDI data frame into spatial object
   data2aSp <- vect(data2a, geom=c("lon_lowestmode", "lat_lowestmode"), crs="epsg:4326", keepgeom=FALSE)
   
   # get ha 4 outline
-  cat_ha4 <- catalog("Data/ha4/als_ha4.laz")
+  cat_ha4 <- catalog("Data/ha4_data/als_ha4.laz")
   extent4_utm <- vect(ext(cat_ha4),crs="epsg:32618")
   extent4_latLon <- project(extent4_utm,"epsg:4326")
   
@@ -70,7 +70,7 @@ jpeg(filename = "Results/GEDI_sercSite.jpeg",
        cex=0.3,
        las=1,
        col=adjustcolor("black",0.2))
-  mtext("All data", side=3, outer=F, cex = mainCex)
+  mtext("a. All data", side=3, outer=F, cex = mainCex, line=-1.5)
   plot(data2aSp[data2aSp$quality_flag==1,],
        mar=c(1,1,1,1),
        pax=list(lab=0),
@@ -78,7 +78,7 @@ jpeg(filename = "Results/GEDI_sercSite.jpeg",
        cex=0.3,
        las=1,
        col=adjustcolor("black",0.2))
-  mtext("Good quality data", side=3, outer=F, cex = mainCex)
+  mtext("b. Good quality data", side=3, outer=F, cex = mainCex, line=-1.5)
   plot(data2aSp[data2aSp$quality_flag==1 & data2a$leaf_off_flag=="00",],
        mar=c(1,1,1,1),
        pax=list(lab=1:2),
@@ -86,7 +86,7 @@ jpeg(filename = "Results/GEDI_sercSite.jpeg",
        cex=0.3,
        las=1,
        col=adjustcolor("black",0.2))
-  mtext("Good quality leaf on data", side=3, outer=F, cex = mainCex)
+  mtext("c. Good quality leaf on data", side=3, outer=F, cex = mainCex, line=-1.5)
   
   plot(data2aSp[data2aSp$quality_flag==1 & data2a$leaf_off_flag=="00" & data2a$year=="2021",],
        mar=c(1,1,1,1),
@@ -95,7 +95,7 @@ jpeg(filename = "Results/GEDI_sercSite.jpeg",
        cex=0.3,
        las=1,
        col=adjustcolor("black",0.2))
-  mtext("2021 Good quality leaf on data", side=3, outer=F, cex = mainCex)
+  mtext("d. 2021 Good quality leaf on data", side=3, outer=F, cex = mainCex, line=-1.5)
   mtext("Latitude (deg)", side=2, outer=T, cex = labCex, las=0, line=1)
   mtext("Longitude (deg)", side=1, outer=T, cex = labCex, line=0)
   
@@ -120,7 +120,7 @@ jpeg(filename = "Results/GEDI_ha4.jpeg",
        pch=20,
        cex=1,
        col=adjustcolor("black",0.5))
-  mtext("All data", side=3, outer=F, cex = mainCex)
+  mtext("a. All data", side=3, outer=F, cex = mainCex)
   
   plot(data_ha4_utmPoly_good,
        ext = extent4_utm,
@@ -129,7 +129,7 @@ jpeg(filename = "Results/GEDI_ha4.jpeg",
        pch=20,
        cex=1,
        col=adjustcolor("black",0.5))
-  mtext("2021 Good quality leaf on data", side=3, outer=F, cex = mainCex)
+  mtext("b. 2021 Good quality leaf on data", side=3, outer=F, cex = mainCex)
   mtext("Easting (m)", side=2, outer=T, cex = labCex, las=0, line=1)
   mtext("Northing (m)", side=1, outer=T, cex = labCex, line=0)
   
@@ -141,7 +141,7 @@ dev.off()
 # https://drive.google.com/drive/folders/1zTAWz94pnOWlbFfPlgONtNq5IFj58dgW?usp=sharing
 # file: drone_ha4.laz
 
-  droneCtg <- catalog("Data/ha4/drone_ha4.laz")
+  droneCtg <- catalog("Data/ha4_data/drone_ha4.laz")
   for(i in 1:length(data_ha4_utmPoly_good)){
     GEDI_clip <- clip_roi(droneCtg, st_as_sf(data_ha4_utmPoly_good[i,]))
     writeLAS(GEDI_clip,paste0("Data/GEDI/GEDI_example",i,".laz"))
@@ -183,17 +183,19 @@ droneShot <- readLAS("Data/GEDI/GEDI_example1.laz")
 lineWidth <- 4
 
 jpeg(filename = "Results/GEDI_example.jpeg",
-     width = 1800, height = 1100, units = "px", pointsize = 36,
+     width = 1800, height = 1000, units = "px", pointsize = 36,
      quality = 300)
 
-  par(mar=c(3,3,1,1), oma=c(2,3,0,0), mfrow=c(1,3), las=1)
+  par(mar=c(3,3,4,1), oma=c(2,3,0,0), mfrow=c(1,3), las=1)
   
   # First panel: plot wavelength from minimum to maximum values,
   # Scale y-axis to height above ground value
   plot(x = data1B_amplitudeScaled,
        y = data1B_htAboveGround,
        xlab=NA,ylab=NA,
+       bty="n",
        type = "l", lwd=lineWidth)
+  text("a", x = 0, y = 85, cex = 1)
   # Add red lines for drone data min and 98th percentile heights
   abline(h=c(min(droneShot$Z),quantile(droneShot$Z,0.98)),
          lwd=lineWidth+2,col=adjustcolor("red",0.6))
@@ -206,7 +208,9 @@ jpeg(filename = "Results/GEDI_example.jpeg",
        y = data1B_htAboveGround,
        ylim=c(-10,40),
        xlab=NA,ylab=NA,
+       bty="n",
        type = "l",lwd=lineWidth)
+  text("b", x = 0, y = 40, cex = 1)
   # Add red lines for drone data min and 98th percentile heights
   abline(h=c(min(droneShot$Z),quantile(droneShot$Z,0.98)),
          lwd=lineWidth+2,col=adjustcolor("red",0.6))
@@ -224,5 +228,6 @@ jpeg(filename = "Results/GEDI_example.jpeg",
        axes=F,
        asp=1)
   axis(side=2,pos=-14, at=seq(0,40,10))
+  text("c", x = -10, y = 38, cex = 1)
   
 dev.off()  
