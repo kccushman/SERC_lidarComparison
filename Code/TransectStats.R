@@ -24,7 +24,7 @@ library("terra")
   alsAll <- catalog("Data/ha4_data/als_ha4.laz")
   dtm <- rasterize_terrain(alsAll, res = 1, algorithm = knnidw(k = 6L, p = 2))
 
-#### Calculate summary stats of transects ####
+#### Calculate summary stats of transects: setup ####
   
 #  Make raster template for voxelized point count/density
   
@@ -36,18 +36,26 @@ library("terra")
                        xmin=0,xmax=80,
                        ymin=0,ymax=45)
   
-  # define function to calculate PAI using MacArthur Horn method
-  MH_PAI <- function(X,Y,Z,N,type="air"){
+  # Define function to calculate PAI using MacArthur Horn method
+  # Input data:
+      # X: center coordinate of voxels in x-direction
+      # Y: center coordinate of voxels in y-direction
+      # Z: center coordinate of voxels in z-direction (vertical direction)
+      # N: number coordinate of returns in voxels
+  
+  MH_PAI <- function(X,Y,Z,N,endN,type="air"){
     
     # combine into data frame
-    dataPoints <- data.frame(X,Y,Z,N)
-    dataPoints$XY <- paste(X,Y,sep="-")
-    dataPoints$ePAI <- NA
+    dataPoints <- data.frame(X,Y,Z,N,endN) # make a data frame of input data
+    dataPoints$XY <- paste(X,Y,sep="-") # make a unique identifier for each "column" of voxels
+    dataPoints$ePAI <- NA # column to store ePAI
     
     # get unique X,Y columns of voxels
     uniqueXY <- unique(dataPoints$XY)
     
     for(i in 1:length(uniqueXY)){
+      
+      # get data for one "column" of voxels at a time
       data_i <- dataPoints[dataPoints$XY==uniqueXY[i],]
       
       # order by height depending on observation type
@@ -61,12 +69,18 @@ library("terra")
       }
       
       for(j in 1:nrow(data_i)){
+        
         pulseIn <- sum(data_i$N[j:nrow(data_i)])
         pulseOut <- sum(data_i$N[(j+1):nrow(data_i)])
-        if(j==nrow(data_i)){
-          pulseOut <- 0
+        
+        # for the last voxel, use the adjust number of pulses in/out of the end of the column
+        if(!is.na(data_i$endN[j])){
+          pulseIn <- data_i$N[j] + data_i$endN[j]
+          pulseOut <- data_i$endN[j]
         }
+        
         dataPoints[dataPoints$XY==uniqueXY[i] & dataPoints$Z==data_i$Z[j],"ePAI"] <- log(pulseIn/pulseOut)
+        
         if(pulseIn==0|pulseOut==0){
           dataPoints[dataPoints$XY==uniqueXY[i] & dataPoints$Z==data_i$Z[j],"ePAI"] <- 0
         }
@@ -77,76 +91,122 @@ library("terra")
     return(dataPoints)
   }
   
+#### Calculate summary stats of transects: ALS ####
   
-### ALS
-  
-    # read lidar data
+  # Read lidar data
     data <- readLAS(alsFile)
     # subtract ground height
     dataNorm <- normalize_height(data, dtm)
 
-    # 2D POINT DENSITY
-      
-      # calculate voxel point density
-      voxel_als <- voxel_metrics(dataNorm, ~list(N = length(Z)), voxelSz, all_voxels = T)
-      # replace "NA" values with 0
-      voxel_als[is.na(voxel_als$N),"N"] <- 0
-      # creates 2 "layers", recombine into one
-      voxel_als <- aggregate(N~X+Z, data = voxel_als, sum)
-      # scale to pts/m3
-      voxel_als$pts_m3 <- voxel_als$N/(voxelSz^3)
-      # rescale X values
-      voxel_als$Xplot <- voxel_als$X - 364560
-      voxel_als$Yplot <- voxel_als$Z + 2.5
-      voxel_als_vect <- vect(voxel_als,
-                             geom=c("Xplot", "Yplot"))
-      densRast_als <- terra::rasterize(voxel_als_vect,rastTemplate, field="pts_m3")
+  # 2D POINT DENSITY
+    # create a data frame to store results
+    voxel_als <- data.frame(X = rep(seq(364560,(364640-5),5),each=length(seq(0,40,5))), # leftmost x-value for each voxel
+                                Y = 1, # dummy y variable for this example because constant 5 m y interval for this transect
+                                Z = rep(seq(0,40,5),length(seq(364560,(364640-5),5))),
+                                N = NA) # number of returns to be calculated
+    # Calculate voxel point density
+    for(i in 1:nrow(voxel_als)){
+      voxel_als$N[i] <- length(dataNorm$Z[dataNorm$X>=voxel_als$X[i] & dataNorm$X<(voxel_als$X[i]+voxelSz)
+                                                 & dataNorm$Z>=voxel_als$Z[i] & dataNorm$Z<(voxel_als$Z[i]+voxelSz)])
+    }
+    # scale to pts/m3
+    voxel_als$pts_m3 <- voxel_als$N/(voxelSz^3)
+    # rescale X values
+    voxel_als$Xplot <- voxel_als$X - 364560
+    voxel_als$Yplot <- voxel_als$Z + 2.5
+    voxel_als_vect <- vect(voxel_als,
+                           geom=c("Xplot", "Yplot"))
+    densRast_als <- terra::rasterize(voxel_als_vect,rastTemplate, field="pts_m3")
     
-    # CANOPY HEIGHT
+  # CANOPY HEIGHT
       chm_als <- rasterize_canopy(dataNorm, res=0.25,
                              algorithm = p2r(subcircle=0.01))
       
-    # Voxelized effective PAI
+  # VOXELIZED EFFECTIVE PAI
       
-      # only keep first returns, and remove points < 2 m height
-      dataNormVeg <- dataNorm[dataNorm$Z>=1 & dataNorm$ReturnNumber==1,]
-      # re-calculate voxel point density
-      voxel_als_pai <- voxel_metrics(dataNormVeg, ~list(N = length(Z)), voxelSz, all_voxels = T)
-      # replace "NA" values with 0
-      voxel_als_pai[is.na(voxel_als_pai$N),"N"] <- 0
-      # creates 2 "layers", recombine into one
-      voxel_als_pai <- aggregate(N~X+Z, data = voxel_als_pai, sum)
+      # create a data frame to store results
+      voxel_als_pai <- data.frame(X = rep(seq(364560,(364640-5),5),each=length(seq(0,40,5))), # leftmost x-value for each voxel
+                                  Y = 1, # dummy y variable for this example because constant 5 m y interval for this transect
+                                  Z = rep(seq(0,40,5),length(seq(364560,(364640-5),5))),
+                                  N = NA, # number of returns to be calculated
+                                  nOut = NA)
+      
+      # Only keep first returns, and remove points < 1 m height
+        htMin <- 1
+        dataNormVeg <- dataNorm[dataNorm$Z>= htMin & dataNorm$ReturnNumber==1,]
+        
+        # Calculate voxel point density
+        for(i in 1:nrow(voxel_als_pai)){
+          voxel_als_pai$N[i] <- length(dataNormVeg$Z[dataNormVeg$X>=voxel_als_pai$X[i] & dataNormVeg$X<(voxel_als_pai$X[i]+voxelSz)
+                                                     & dataNormVeg$Z>=voxel_als_pai$Z[i] & dataNormVeg$Z<(voxel_als_pai$Z[i]+voxelSz)])
+        }
+      
+      # For each column, calculate the number of points below height threshold to use as the true number of beams "out" of the voxel
+        voxel_als_pai$nOut <- NA
+        voxel_als_pai$voxelOutHt <- NA
+        xValues <- unique(voxel_als_pai$X)
+        
+        for(i in xValues){
+          nOut_i <- nrow(dataNorm[dataNorm$Z < htMin & dataNorm$ReturnNumber==1 & dataNorm$X>=(i) & dataNorm$X < (i+voxelSz),])
+          
+          # if there is at least one point below the threshold, use the number of points as the number of lasers out of the voxel and adjust voxel height based on the minimim threshold
+          if(nOut_i>0){
+            voxel_als_pai[voxel_als_pai$X==i & voxel_als_pai$Z==0,"nOut"] <- nOut_i
+            voxel_als_pai[voxel_als_pai$X==i & voxel_als_pai$Z==0,"voxelOutHt"] <- voxelSz - htMin
+          }
+          
+          # if no points below the threshold, find the height of the lowest point
+          if(nOut_i==0){
+            minZ <- min(dataNormVeg$Z[dataNormVeg$X>=i & dataNormVeg$X < (i+voxelSz)])
+            
+          # find correct row to edit, assign the number out = 1, and change the voxel height to reflect new z distance to shortest point
+            whichRow <- which(voxel_als_pai$X==i  & minZ>=voxel_als_pai$Z & minZ<(voxel_als_pai$Z+5))
+            voxel_als_pai[whichRow,"nOut"] <- 1
+            voxel_als_pai[whichRow,"voxelOutHt"] <- voxel_als_pai$Z[whichRow] + 5 - minZ
+          }
+          
+        }
+        
       # scale to pts/m3
-      voxel_als_pai[voxel_als_pai$Z>0,"pts_m3"] <- voxel_als_pai[voxel_als_pai$Z>0,"N"]/(voxelSz*voxelSz*voxelSz)
-        # account for removing points < 1 m height
-        voxel_als_pai[voxel_als_pai$Z==0,"pts_m3"] <- voxel_als_pai[voxel_als_pai$Z==0,"N"]/((voxelSz-1)*voxelSz*voxelSz)
+      voxel_als_pai[,"pts_m3"] <- voxel_als_pai[,"N"]/(voxelSz*voxelSz*voxelSz)
+        # account for edits to last return in each column
+        voxel_als_pai[!is.na(voxel_als_pai$nOut),"pts_m3"] <- voxel_als_pai[!is.na(voxel_als_pai$nOut),"N"]/(voxel_als_pai[!is.na(voxel_als_pai$nOut),"voxelOutHt"]*voxelSz*voxelSz)
+        voxel_als_pai[!is.na(voxel_als_pai$nOut),"nOut_m3"]<-  voxel_als_pai[!is.na(voxel_als_pai$nOut),"nOut"]/(voxel_als_pai[!is.na(voxel_als_pai$nOut),"voxelOutHt"]*voxelSz*voxelSz)
+        
       # rescale X values
-        voxel_als_pai$Xplot <- voxel_als_pai$X - 364560
+        voxel_als_pai$Xplot <- voxel_als_pai$X - 364560 + 2.5
         voxel_als_pai$Yplot <- voxel_als_pai$Z + 2.5
-      # Use McArthur Horn to estimate effective PAI
+      
+        # Use McArthur Horn to estimate effective PAI
         ePAI_als <- MH_PAI(X=voxel_als_pai$Xplot,
-                           Y=1,
+                           Y=1, # dummy y value because we have a transect that is exactly 5 m in the y direction
                            Z=voxel_als_pai$Yplot,
                            N=voxel_als_pai$pts_m3,
+                           endN=voxel_als_pai$nOut_m3,
                            type="air")
         pai_als_vect <- vect(ePAI_als,
                                geom=c("X", "Z"))
         paiRast_als <- terra::rasterize(pai_als_vect,rastTemplate, field="ePAI")
       
-### Drone - leaf on 
+#### Calculate summary stats of transects: ULS leaf on ####
+        
+  # Read lidar data
+    data <- readLAS(droneFile)
+    # subtract ground height
+    dataNorm <- normalize_height(data, dtm)
       
-      # read lidar data
-      data <- readLAS(droneFile)
-      # subtract ground height
-      dataNorm <- normalize_height(data, dtm)
+  # 2D POINT DENSITY
+    # create a data frame to store results
+    voxel_drone <- data.frame(X = rep(seq(364560,(364640-5),5),each=length(seq(0,40,5))), # leftmost x-value for each voxel
+                            Y = 1, # dummy y variable for this example because constant 5 m y interval for this transect
+                            Z = rep(seq(0,40,5),length(seq(364560,(364640-5),5))),
+                            N = NA) # number of returns to be calculated
+    # Calculate voxel point density
+    for(i in 1:nrow(voxel_drone)){
+      voxel_drone$N[i] <- length(dataNorm$Z[dataNorm$X>=voxel_drone$X[i] & dataNorm$X<(voxel_drone$X[i]+voxelSz)
+                                          & dataNorm$Z>=voxel_drone$Z[i] & dataNorm$Z<(voxel_drone$Z[i]+voxelSz)])
+    }
       
-      # 2D POINT DENSITY
-      # calculate voxel point density
-      voxel_drone <- voxel_metrics(dataNorm, ~list(N = length(Z)), 5, all_voxels = T)
-      # replace "NA" values with 0
-      voxel_drone[is.na(voxel_drone$N),"N"] <- 0
-      # creates 2 "layers", recombine into one
-      voxel_drone <- aggregate(N~X+Z, data = voxel_drone, sum)
       # scale to pts/m3
       voxel_drone$pts_m3 <- voxel_drone$N/25
       # rescale X values
@@ -162,53 +222,98 @@ library("terra")
       
       # Voxelized effective PAI
       
-        # only keep first returns, and remove points < 1 m height
-        dataNormVeg <- dataNorm[dataNorm$Z>=1 & dataNorm$ReturnNumber==1,]
-        # re-calculate voxel point density
-        voxel_drone_pai <- voxel_metrics(dataNormVeg, ~list(N = length(Z)), voxelSz, all_voxels = T)
-        # replace "NA" values with 0
-        voxel_drone_pai[is.na(voxel_drone_pai$N),"N"] <- 0
-        # creates 2 "layers", recombine into one
-        voxel_drone_pai <- aggregate(N~X+Z, data = voxel_drone_pai, sum)
-        # scale to pts/m3
-        voxel_drone_pai[voxel_drone_pai$Z>0,"pts_m3"] <- voxel_drone_pai[voxel_drone_pai$Z>0,"N"]/(voxelSz*voxelSz*voxelSz)
-        # account for removing points < 1 m height
-        voxel_drone_pai[voxel_drone_pai$Z==0,"pts_m3"] <- voxel_drone_pai[voxel_drone_pai$Z==0,"N"]/((voxelSz-1)*voxelSz*voxelSz)
-        # rescale X values
-        voxel_drone_pai$Xplot <- voxel_drone_pai$X - 364560
-        voxel_drone_pai$Yplot <- voxel_drone_pai$Z + 2.5
-        # Use McArthur Horn to estimate effective PAI
-        ePAI_drone <- MH_PAI(X=voxel_drone_pai$Xplot,
-                           Y=1,
-                           Z=voxel_drone_pai$Yplot,
-                           N=voxel_drone_pai$pts_m3,
-                           type="air")
-        pai_drone_vect <- vect(ePAI_drone,
-                             geom=c("X", "Z"))
-        paiRast_drone <- terra::rasterize(pai_drone_vect,rastTemplate, field="ePAI")
+      # create a data frame to store results
+      voxel_drone_pai <- data.frame(X = rep(seq(364560,(364640-5),5),each=length(seq(0,40,5))), # leftmost x-value for each voxel
+                                  Y = 1, # dummy y variable for this example because constant 5 m y interval for this transect
+                                  Z = rep(seq(0,40,5),length(seq(364560,(364640-5),5))),
+                                  N = NA, # number of returns to be calculated
+                                  nOut = NA)
       
-### Drone - leaf off 
+      # Only keep first returns, and remove points < 1 m height
+      htMin <- 1
+      dataNormVeg <- dataNorm[dataNorm$Z>= htMin & dataNorm$ReturnNumber==1,]
+      
+      # Calculate voxel point density
+      for(i in 1:nrow(voxel_drone_pai)){
+        voxel_drone_pai$N[i] <- length(dataNormVeg$Z[dataNormVeg$X>=voxel_drone_pai$X[i] & dataNormVeg$X<(voxel_drone_pai$X[i]+voxelSz)
+                                                   & dataNormVeg$Z>=voxel_drone_pai$Z[i] & dataNormVeg$Z<(voxel_drone_pai$Z[i]+voxelSz)])
+      }
+      
+      # For each column, calculate the number of points below height threshold to use as the true number of beams "out" of the voxel
+      voxel_drone_pai$nOut <- NA
+      voxel_drone_pai$voxelOutHt <- NA
+      xValues <- unique(voxel_drone_pai$X)
+      
+      for(i in xValues){
+        nOut_i <- nrow(dataNorm[dataNorm$Z < htMin & dataNorm$ReturnNumber==1 & dataNorm$X>=(i) & dataNorm$X < (i+voxelSz),])
         
+        # if there is at least one point below the threshold, use the number of points as the number of lasers out of the voxel and adjust voxel height based on the minimim threshold
+        if(nOut_i>0){
+          voxel_drone_pai[voxel_drone_pai$X==i & voxel_drone_pai$Z==0,"nOut"] <- nOut_i
+          voxel_drone_pai[voxel_drone_pai$X==i & voxel_drone_pai$Z==0,"voxelOutHt"] <- voxelSz - htMin
+        }
+        
+          # find correct row to edit, assign the number out = 1, and change the voxel height to reflect new z distance to shortest point
+        if(nOut_i==0){
+          minZ <- min(dataNormVeg$Z[dataNormVeg$X>=i & dataNormVeg$X < (i+voxelSz)])
+          
+          # find correct row to edit
+          whichRow <- which(voxel_drone_pai$X==i  & minZ>=voxel_drone_pai$Z & minZ<(voxel_drone_pai$Z+5))
+          voxel_drone_pai[whichRow,"nOut"] <- 1
+          voxel_drone_pai[whichRow,"voxelOutHt"] <- voxel_drone_pai$Z[whichRow] + 5 - minZ
+        }
+        
+      }
+      
+      # scale to pts/m3
+      voxel_drone_pai[,"pts_m3"] <- voxel_drone_pai[,"N"]/(voxelSz*voxelSz*voxelSz)
+      # account for edits to last return in each column
+      voxel_drone_pai[!is.na(voxel_drone_pai$nOut),"pts_m3"] <- voxel_drone_pai[!is.na(voxel_drone_pai$nOut),"N"]/(voxel_drone_pai[!is.na(voxel_drone_pai$nOut),"voxelOutHt"]*voxelSz*voxelSz)
+      voxel_drone_pai[!is.na(voxel_drone_pai$nOut),"nOut_m3"]<-  voxel_drone_pai[!is.na(voxel_drone_pai$nOut),"nOut"]/(voxel_drone_pai[!is.na(voxel_drone_pai$nOut),"voxelOutHt"]*voxelSz*voxelSz)
+      
+      # rescale X values
+      voxel_drone_pai$Xplot <- voxel_drone_pai$X - 364560 + 2.5
+      voxel_drone_pai$Yplot <- voxel_drone_pai$Z + 2.5
+      
+      # Use McArthur Horn to estimate effective PAI
+      ePAI_drone <- MH_PAI(X=voxel_drone_pai$Xplot,
+                         Y=1, # dummy y value because we have a transect that is exactly 5 m in the y direction
+                         Z=voxel_drone_pai$Yplot,
+                         N=voxel_drone_pai$pts_m3,
+                         endN=voxel_drone_pai$nOut_m3,
+                         type="air")
+      pai_drone_vect <- vect(ePAI_drone,
+                           geom=c("X", "Z"))
+      paiRast_drone <- terra::rasterize(pai_drone_vect,rastTemplate, field="ePAI")
+      
+      
+#### Calculate summary stats of transects: ULS leaf off ####
+      
         # read lidar data
         data <- readLAS(droneFile_leafOff)
         # subtract ground height
         dataNorm <- normalize_height(data, dtm)
         
     # 2D POINT DENSITY
-        # calculate voxel point density
-        voxel_droneLO <- voxel_metrics(dataNorm, ~list(N = length(Z)), 5, all_voxels = T)
-        # replace "NA" values with 0
-        voxel_droneLO[is.na(voxel_droneLO$N),"N"] <- 0
-        # creates 2 "layers", recombine into one
-        voxel_droneLO <- aggregate(N~X+Z, data = voxel_droneLO, sum)
-        # scale to pts/m3
-        voxel_droneLO$pts_m3 <- voxel_droneLO$N/25
-        # rescale X values
-        voxel_droneLO$Xplot <- voxel_droneLO$X - 364560
-        voxel_droneLO$Yplot <- voxel_droneLO$Z + 2.5
-        voxel_droneLO_vect <- vect(voxel_droneLO,
-                                 geom=c("Xplot", "Yplot"))
-        densRast_droneLO <- terra::rasterize(voxel_droneLO_vect,rastTemplate, field="pts_m3")
+      # create a data frame to store results
+      voxel_droneLO <- data.frame(X = rep(seq(364560,(364640-5),5),each=length(seq(0,40,5))), # leftmost x-value for each voxel
+                              Y = 1, # dummy y variable for this example because constant 5 m y interval for this transect
+                              Z = rep(seq(0,40,5),length(seq(364560,(364640-5),5))),
+                              N = NA) # number of returns to be calculated
+      # Calculate voxel point density
+      for(i in 1:nrow(voxel_droneLO)){
+        voxel_droneLO$N[i] <- length(dataNorm$Z[dataNorm$X>=voxel_droneLO$X[i] & dataNorm$X<(voxel_droneLO$X[i]+voxelSz)
+                                            & dataNorm$Z>=voxel_droneLO$Z[i] & dataNorm$Z<(voxel_droneLO$Z[i]+voxelSz)])
+      }
+      
+      # scale to pts/m3
+      voxel_droneLO$pts_m3 <- voxel_droneLO$N/25
+      # rescale X values
+      voxel_droneLO$Xplot <- voxel_droneLO$X - 364560
+      voxel_droneLO$Yplot <- voxel_droneLO$Z + 2.5
+      voxel_droneLO_vect <- vect(voxel_droneLO,
+                               geom=c("Xplot", "Yplot"))
+      densRast_droneLO <- terra::rasterize(voxel_droneLO_vect,rastTemplate, field="pts_m3")
         
     # CANOPY HEIGHT
         chm_droneLO <- rasterize_canopy(dataNorm, res=0.25,
@@ -216,20 +321,24 @@ library("terra")
         
   # Don't calculate ePAI for leaf-off data
         
-### MLS
-      
-      # read lidar data
+#### Calculate summary stats of transects: MLS ####
+        
+    # Read lidar data
       data <- readLAS(mlsFile)
       # subtract ground height
       dataNorm <- normalize_height(data, dtm)
       
-      # 2D POINT DENSITY
-      # calculate voxel point density
-      voxel_mls <- voxel_metrics(dataNorm, ~list(N = length(Z)), 5, all_voxels = T)
-      # replace "NA" values with 0
-      voxel_mls[is.na(voxel_mls$N),"N"] <- 0
-      # creates 2 "layers", recombine into one
-      voxel_mls <- aggregate(N~X+Z, data = voxel_mls, sum)
+    # 2D POINT DENSITY
+      # create a data frame to store results
+      voxel_mls <- data.frame(X = rep(seq(364560,(364640-5),5),each=length(seq(0,40,5))), # leftmost x-value for each voxel
+                              Y = 1, # dummy y variable for this example because constant 5 m y interval for this transect
+                              Z = rep(seq(0,40,5),length(seq(364560,(364640-5),5))),
+                              N = NA) # number of returns to be calculated
+      # Calculate voxel point density
+      for(i in 1:nrow(voxel_mls)){
+        voxel_mls$N[i] <- length(dataNorm$Z[dataNorm$X>=voxel_mls$X[i] & dataNorm$X<(voxel_mls$X[i]+voxelSz)
+                                            & dataNorm$Z>=voxel_mls$Z[i] & dataNorm$Z<(voxel_mls$Z[i]+voxelSz)])
+      }
       # scale to pts/m3
       voxel_mls$pts_m3 <- voxel_mls$N/25
       # rescale X values
@@ -243,48 +352,82 @@ library("terra")
       chm_mls <- rasterize_canopy(dataNorm, res=0.25,
                              algorithm = p2r(subcircle=0.01))
       
-    # Voxelized effective PAI
+  # VOXELIZED EFFECTIVE PAI
       
-      # only keep first returns, and remove points < 1 m height
-      dataNormVeg <- dataNorm[dataNorm$Z>=1 & dataNorm$ReturnNumber==1,]
-      # re-calculate voxel point density
-      voxel_mls_pai <- voxel_metrics(dataNormVeg, ~list(N = length(Z)), voxelSz, all_voxels = T)
-      # replace "NA" values with 0
-      voxel_mls_pai[is.na(voxel_mls_pai$N),"N"] <- 0
-      # creates 2 "layers", recombine into one
-      voxel_mls_pai <- aggregate(N~X+Z, data = voxel_mls_pai, sum)
+      # create a data frame to store results
+      voxel_mls_pai <- data.frame(X = rep(seq(364560,(364640-5),5),each=length(seq(0,40,5))), # leftmost x-value for each voxel
+                                  Y = 1, # dummy y variable for this example because constant 5 m y interval for this transect
+                                  Z = rep(seq(0,40,5),length(seq(364560,(364640-5),5))),
+                                  N = NA, # number of returns to be calculated
+                                  nOut = NA)
+      
+      # Only keep first returns, and remove points < 1 m height
+        htMin <- 1
+        dataNormVeg <- dataNorm[dataNorm$Z>= htMin & dataNorm$ReturnNumber==1,]
+        
+        # Calculate voxel point density
+        for(i in 1:nrow(voxel_mls_pai)){
+          voxel_mls_pai$N[i] <- length(dataNormVeg$Z[dataNormVeg$X>=voxel_mls_pai$X[i] & dataNormVeg$X<(voxel_mls_pai$X[i]+voxelSz)
+                                                     & dataNormVeg$Z>=voxel_mls_pai$Z[i] & dataNormVeg$Z<(voxel_mls_pai$Z[i]+voxelSz)])
+        }
+      
+      # For each column, calculate the highest point and use it to correct for the number of outgoing pulses in the tallest voxel
+        voxel_mls_pai$nOut <- NA
+        voxel_mls_pai$voxelOutHt <- NA
+        xValues <- unique(voxel_mls_pai$X)
+        
+        for(i in xValues){
+        
+          # if no points below the threshold, find the height of the tallest point
+            maxZ <- max(dataNormVeg$Z[dataNormVeg$X>=i & dataNormVeg$X < (i+voxelSz)])
+            
+          # find correct row to edit, assign the number out = 1, and change the voxel height to reflect new z distance to tallest point
+            whichRow <- which(voxel_mls_pai$X==i  & maxZ>=voxel_mls_pai$Z & maxZ<(voxel_mls_pai$Z+5))
+            voxel_mls_pai[whichRow,"nOut"] <- 1
+            voxel_mls_pai[whichRow,"voxelOutHt"] <- maxZ - voxel_mls_pai$Z[whichRow]
+
+        }
+        
       # scale to pts/m3
-      voxel_mls_pai[voxel_mls_pai$Z>0,"pts_m3"] <- voxel_mls_pai[voxel_mls_pai$Z>0,"N"]/(voxelSz*voxelSz*voxelSz)
-      # account for removing points < 1 m height
-      voxel_mls_pai[voxel_mls_pai$Z==0,"pts_m3"] <- voxel_mls_pai[voxel_mls_pai$Z==0,"N"]/((voxelSz-1)*voxelSz*voxelSz)
+      voxel_mls_pai[,"pts_m3"] <- voxel_mls_pai[,"N"]/(voxelSz*voxelSz*voxelSz)
+        # account for edits to last return in each column
+        voxel_mls_pai[voxel_mls_pai$Z==0,"pts_m3"] <- voxel_mls_pai[voxel_mls_pai$Z==0,"N"]/((voxelSz-htMin)*voxelSz*voxelSz)
+        voxel_mls_pai[!is.na(voxel_mls_pai$nOut),"pts_m3"] <- voxel_mls_pai[!is.na(voxel_mls_pai$nOut),"N"]/(voxel_mls_pai[!is.na(voxel_mls_pai$nOut),"voxelOutHt"]*voxelSz*voxelSz)
+        voxel_mls_pai[!is.na(voxel_mls_pai$nOut),"nOut_m3"]<-  voxel_mls_pai[!is.na(voxel_mls_pai$nOut),"nOut"]/(voxel_mls_pai[!is.na(voxel_mls_pai$nOut),"voxelOutHt"]*voxelSz*voxelSz)
+        
       # rescale X values
-      voxel_mls_pai$Xplot <- voxel_mls_pai$X - 364560
-      voxel_mls_pai$Yplot <- voxel_mls_pai$Z + 2.5
-      # Use McArthur Horn to estimate effective PAI
-      ePAI_mls <- MH_PAI(X=voxel_mls_pai$Xplot,
-                         Y=1,
-                         Z=voxel_mls_pai$Yplot,
-                         N=voxel_mls_pai$pts_m3,
-                         type="ground")
-      pai_mls_vect <- vect(ePAI_mls,
-                           geom=c("X", "Z"))
-      paiRast_mls <- terra::rasterize(pai_mls_vect,rastTemplate, field="ePAI")    
+        voxel_mls_pai$Xplot <- voxel_mls_pai$X - 364560 + 2.5
+        voxel_mls_pai$Yplot <- voxel_mls_pai$Z + 2.5
       
+        # Use McArthur Horn to estimate effective PAI
+        ePAI_mls <- MH_PAI(X=voxel_mls_pai$Xplot,
+                           Y=1, # dummy y value because we have a transect that is exactly 5 m in the y direction
+                           Z=voxel_mls_pai$Yplot,
+                           N=voxel_mls_pai$pts_m3,
+                           endN=voxel_mls_pai$nOut_m3,
+                           type="ground")
+        pai_mls_vect <- vect(ePAI_mls,
+                               geom=c("X", "Z"))
+        paiRast_mls <- terra::rasterize(pai_mls_vect,rastTemplate, field="ePAI")
       
-### TLS
+#### Calculate summary stats of transects: TLS ####
       
-      # read lidar data
+    # Read lidar data
       data <- readLAS(tlsCat)
       # subtract ground height
       dataNorm <- normalize_height(data, dtm)
       
-      # 2D POINT DENSITY
-      # calculate voxel point density
-      voxel_tls <- voxel_metrics(dataNorm, ~list(N = length(Z)), 5, all_voxels = T)
-      # replace "NA" values with 0
-      voxel_tls[is.na(voxel_tls$N),"N"] <- 0
-      # creates 2 "layers", recombine into one
-      voxel_tls <- aggregate(N~X+Z, data = voxel_tls, sum)
+    # 2D POINT DENSITY
+      # create a data frame to store results
+      voxel_tls <- data.frame(X = rep(seq(364560,(364640-5),5),each=length(seq(0,40,5))), # leftmost x-value for each voxel
+                              Y = 1, # dummy y variable for this example because constant 5 m y interval for this transect
+                              Z = rep(seq(0,40,5),length(seq(364560,(364640-5),5))),
+                              N = NA) # number of returns to be calculated
+      # Calculate voxel point density
+      for(i in 1:nrow(voxel_tls)){
+        voxel_tls$N[i] <- length(dataNorm$Z[dataNorm$X>=voxel_tls$X[i] & dataNorm$X<(voxel_tls$X[i]+voxelSz)
+                                            & dataNorm$Z>=voxel_tls$Z[i] & dataNorm$Z<(voxel_tls$Z[i]+voxelSz)])
+      }
       # scale to pts/m3
       voxel_tls$pts_m3 <- voxel_tls$N/25
       # rescale X values
@@ -294,36 +437,67 @@ library("terra")
                              geom=c("Xplot", "Yplot"))
       densRast_tls <- terra::rasterize(voxel_tls_vect,rastTemplate, field="pts_m3")
       
-      # CANOPY HEIGHT
+    # CANOPY HEIGHT
       chm_tls <- rasterize_canopy(dataNorm, res=0.25,
                              algorithm = p2r(subcircle=0.01))
       
-    # Voxelized effective PAI
+  # VOXELIZED EFFECTIVE PAI
       
-      # only keep first returns, and remove points < 2 m height
-      dataNormVeg <- dataNorm[dataNorm$Z>=1 & dataNorm$ReturnNumber==1,]
-      # re-calculate voxel point density
-      voxel_tls_pai <- voxel_metrics(dataNormVeg, ~list(N = length(Z)), voxelSz, all_voxels = T)
-      # replace "NA" values with 0
-      voxel_tls_pai[is.na(voxel_tls_pai$N),"N"] <- 0
-      # creates 2 "layers", recombine into one
-      voxel_tls_pai <- aggregate(N~X+Z, data = voxel_tls_pai, sum)
+      # create a data frame to store results
+      voxel_tls_pai <- data.frame(X = rep(seq(364560,(364640-5),5),each=length(seq(0,40,5))), # leftmost x-value for each voxel
+                                  Y = 1, # dummy y variable for this example because constant 5 m y interval for this transect
+                                  Z = rep(seq(0,40,5),length(seq(364560,(364640-5),5))),
+                                  N = NA, # number of returns to be calculated
+                                  nOut = NA)
+      
+      # Only keep first returns, and remove points < 1 m height
+        htMin <- 1
+        dataNormVeg <- dataNorm[dataNorm$Z>= htMin & dataNorm$ReturnNumber==1,]
+        
+        # Calculate voxel point density
+        for(i in 1:nrow(voxel_tls_pai)){
+          voxel_tls_pai$N[i] <- length(dataNormVeg$Z[dataNormVeg$X>=voxel_tls_pai$X[i] & dataNormVeg$X<(voxel_tls_pai$X[i]+voxelSz)
+                                                     & dataNormVeg$Z>=voxel_tls_pai$Z[i] & dataNormVeg$Z<(voxel_tls_pai$Z[i]+voxelSz)])
+        }
+      
+      # For each column, calculate the highest point and use it to correct for the number of outgoing pulses in the tallest voxel
+        voxel_tls_pai$nOut <- NA
+        voxel_tls_pai$voxelOutHt <- NA
+        xValues <- unique(voxel_tls_pai$X)
+        
+        for(i in xValues){
+        
+          # if no points below the threshold, find the height of the tallest point
+            maxZ <- max(dataNormVeg$Z[dataNormVeg$X>=i & dataNormVeg$X < (i+voxelSz)])
+            
+          # find correct row to edit, assign the number out = 1, and change the voxel height to reflect new z distance to tallest point
+            whichRow <- which(voxel_tls_pai$X==i  & maxZ>=voxel_tls_pai$Z & maxZ<(voxel_tls_pai$Z+5))
+            voxel_tls_pai[whichRow,"nOut"] <- 1
+            voxel_tls_pai[whichRow,"voxelOutHt"] <- maxZ - voxel_tls_pai$Z[whichRow]
+
+        }
+        
       # scale to pts/m3
-      voxel_tls_pai[voxel_tls_pai$Z>0,"pts_m3"] <- voxel_tls_pai[voxel_tls_pai$Z>0,"N"]/(voxelSz*voxelSz*voxelSz)
-      # account for removing points < 1 m height
-      voxel_tls_pai[voxel_tls_pai$Z==0,"pts_m3"] <- voxel_tls_pai[voxel_tls_pai$Z==0,"N"]/((voxelSz-1)*voxelSz*voxelSz)
+      voxel_tls_pai[,"pts_m3"] <- voxel_tls_pai[,"N"]/(voxelSz*voxelSz*voxelSz)
+        # account for edits to last return in each column
+        voxel_tls_pai[voxel_tls_pai$Z==0,"pts_m3"] <- voxel_tls_pai[voxel_tls_pai$Z==0,"N"]/((voxelSz-htMin)*voxelSz*voxelSz)
+        voxel_tls_pai[!is.na(voxel_tls_pai$nOut),"pts_m3"] <- voxel_tls_pai[!is.na(voxel_tls_pai$nOut),"N"]/(voxel_tls_pai[!is.na(voxel_tls_pai$nOut),"voxelOutHt"]*voxelSz*voxelSz)
+        voxel_tls_pai[!is.na(voxel_tls_pai$nOut),"nOut_m3"]<-  voxel_tls_pai[!is.na(voxel_tls_pai$nOut),"nOut"]/(voxel_tls_pai[!is.na(voxel_tls_pai$nOut),"voxelOutHt"]*voxelSz*voxelSz)
+        
       # rescale X values
-      voxel_tls_pai$Xplot <- voxel_tls_pai$X - 364560
-      voxel_tls_pai$Yplot <- voxel_tls_pai$Z + 2.5
-      # Use McArthur Horn to estimate effective PAI
-      ePAI_tls <- MH_PAI(X=voxel_tls_pai$Xplot,
-                         Y=1,
-                         Z=voxel_tls_pai$Yplot,
-                         N=voxel_tls_pai$pts_m3,
-                         type="ground")
-      pai_tls_vect <- vect(ePAI_tls,
-                           geom=c("X", "Z"))
-      paiRast_tls <- terra::rasterize(pai_tls_vect,rastTemplate, field="ePAI")
+        voxel_tls_pai$Xplot <- voxel_tls_pai$X - 364560 + 2.5
+        voxel_tls_pai$Yplot <- voxel_tls_pai$Z + 2.5
+      
+        # Use McArthur Horn to estimate effective PAI
+        ePAI_tls <- MH_PAI(X=voxel_tls_pai$Xplot,
+                           Y=1, # dummy y value because we have a transect that is exactly 5 m in the y direction
+                           Z=voxel_tls_pai$Yplot,
+                           N=voxel_tls_pai$pts_m3,
+                           endN=voxel_tls_pai$nOut_m3,
+                           type="ground")
+        pai_tls_vect <- vect(ePAI_tls,
+                               geom=c("X", "Z"))
+        paiRast_tls <- terra::rasterize(pai_tls_vect,rastTemplate, field="ePAI")
       
 #### Make table of summary stats ####
       
@@ -366,7 +540,7 @@ library("terra")
       transectSummary$canopyRugosity[5] <- round(sd(aggregate(ePAI_tls$ePAI, by=list(ePAI_tls$X), FUN="sd")[,2]),2)
       transectSummary$meanLAI[5] <- round(mean(aggregate(ePAI_tls$ePAI, by=list(ePAI_tls$X), FUN="sum")[,2]),2)
       
-      write.csv(transectSummary,"Results/transectSummaryStats.csv",row.names = F)
+      write.csv(transectSummary,"Results/transectSummaryStatsUpdated.csv",row.names = F)
       
       
       transectSummary$canopyRugosity <- as.numeric(transectSummary$canopyRugosity)
@@ -475,7 +649,7 @@ paiBreaks <- c(0,1e-8,0.25,0.5,1:5,paiRange[2])
 cexLab <- 1.4
 cexLetter <- 2
 
-jpeg(filename = "Results/VoxelMetricsPlot.jpeg",
+jpeg(filename = "Results/VoxelMetricsPlotUpdated.jpeg",
      width = 2400, height = 3000, units = "px", pointsize = 36,
      quality = 300)
 
