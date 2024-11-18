@@ -633,7 +633,70 @@ tiff(filename = "Results/Figure2.tiff",
 dev.off()  
   
   
-#### Figure 4. Rasterized metric plots ####
+#### Figure 4. Point cloud plot: trunk cross section ####
+
+# These point clouds were manually subsetted in CloudCompare and saved as
+# separate .laz files for ease of plotting
+trunkDrone <- readLAS("Data/trunk/trunk_drone.laz")
+trunkMLS <- readLAS("Data/trunk/trunk_mls.laz")
+trunkTLS <- readLAS("Data/trunk/trunk_tls.laz")
+
+
+zMin <- 7.97
+zMax <- 8.00
+xRange <- c(364623.6,364624.7)
+yRange <- c(4305790.9,4305791.6)
+ptCex <- 0.4
+
+pdf(file = "Results/Figure5.pdf",
+     width = 6.81, height = 2.3, pointsize = 12)
+
+  par(mfrow=c(1,3), mar=c(0,0,0,0),oma=c(2,2,2,2))
+  
+  plot(x = trunkTLS$X[trunkTLS$Z>zMin & trunkTLS$Z<zMax],
+       y = trunkTLS$Y[trunkTLS$Z>zMin & trunkTLS$Z<zMax],
+       pch=19,
+       xlim=xRange,
+       ylim=yRange,
+       cex=ptCex,
+       axes=F,ylab=NA,xlab=NA,
+       col = adjustcolor("black",0.5),
+       asp=1)
+  mtext("a. TLS",side=3,line=-1,outer=F)
+  #text("a", x= xRange[1], y = yRange[2])
+  
+  lines(x=c(364623.6,364623.8),
+        y=c(4305790.88,4305790.88),
+        lwd=2)
+  text(" 20 cm", x=364623.6,y=4305790.95, adj=0, cex=1.4)
+
+  plot(x = trunkMLS$X[trunkMLS$Z>zMin & trunkMLS$Z<zMax],
+       y = trunkMLS$Y[trunkMLS$Z>zMin & trunkMLS$Z<zMax],
+       pch=19,
+       xlim=xRange,
+       ylim=yRange,
+       cex=ptCex,
+       axes=F,ylab=NA,xlab=NA,
+       col = adjustcolor("black",0.5),
+       asp=1)
+  mtext("b. MLS",side=3,line=-1,outer=F)
+  #text("b", x= xRange[1], y = yRange[2])
+  
+  plot(x = trunkDrone$X[trunkDrone$Z>zMin & trunkDrone$Z<zMax],
+       y = trunkDrone$Y[trunkDrone$Z>zMin & trunkDrone$Z<zMax],
+       pch=19,
+       xlim=xRange,
+       ylim=yRange,
+       cex=ptCex,
+       axes=F,ylab=NA,xlab=NA,
+       col = adjustcolor("black",0.5),
+       asp=1)
+  mtext("c. ULS (leaf off)",side=3,line=-1,outer=F)
+  #text("c", x= xRange[1], y = yRange[2])
+  
+dev.off()
+
+#### Figure 5. Rasterized metric plots ####
 
 densRange <- range(values(densRast_als),
                    values(densRast_drone),
@@ -817,70 +880,6 @@ mtext("Height (m)",side=2,line=2,outer=T,las=0, cex = cexLab)
 text("h", x = 5, y = 42.5, cex = cexLetter)
 
 dev.off()  
-
-#### Figure 5. Point cloud plot: trunk cross section ####
-
-# These point clouds were manually subsetted in CloudCompare and saved as
-# separate .laz files for ease of plotting
-trunkDrone <- readLAS("Data/trunk/trunk_drone.laz")
-trunkMLS <- readLAS("Data/trunk/trunk_mls.laz")
-trunkTLS <- readLAS("Data/trunk/trunk_tls.laz")
-
-
-zMin <- 7.97
-zMax <- 8.00
-xRange <- c(364623.6,364624.7)
-yRange <- c(4305790.9,4305791.6)
-ptCex <- 0.4
-
-pdf(file = "Results/Figure5.pdf",
-     width = 6.81, height = 2.3, pointsize = 12)
-
-  par(mfrow=c(1,3), mar=c(0,0,0,0),oma=c(2,2,2,2))
-  
-  plot(x = trunkTLS$X[trunkTLS$Z>zMin & trunkTLS$Z<zMax],
-       y = trunkTLS$Y[trunkTLS$Z>zMin & trunkTLS$Z<zMax],
-       pch=19,
-       xlim=xRange,
-       ylim=yRange,
-       cex=ptCex,
-       axes=F,ylab=NA,xlab=NA,
-       col = adjustcolor("black",0.5),
-       asp=1)
-  mtext("a. TLS",side=3,line=-1,outer=F)
-  #text("a", x= xRange[1], y = yRange[2])
-  
-  lines(x=c(364623.6,364623.8),
-        y=c(4305790.88,4305790.88),
-        lwd=2)
-  text(" 20 cm", x=364623.6,y=4305790.95, adj=0, cex=1.4)
-
-  plot(x = trunkMLS$X[trunkMLS$Z>zMin & trunkMLS$Z<zMax],
-       y = trunkMLS$Y[trunkMLS$Z>zMin & trunkMLS$Z<zMax],
-       pch=19,
-       xlim=xRange,
-       ylim=yRange,
-       cex=ptCex,
-       axes=F,ylab=NA,xlab=NA,
-       col = adjustcolor("black",0.5),
-       asp=1)
-  mtext("b. MLS",side=3,line=-1,outer=F)
-  #text("b", x= xRange[1], y = yRange[2])
-  
-  plot(x = trunkDrone$X[trunkDrone$Z>zMin & trunkDrone$Z<zMax],
-       y = trunkDrone$Y[trunkDrone$Z>zMin & trunkDrone$Z<zMax],
-       pch=19,
-       xlim=xRange,
-       ylim=yRange,
-       cex=ptCex,
-       axes=F,ylab=NA,xlab=NA,
-       col = adjustcolor("black",0.5),
-       asp=1)
-  mtext("c. ULS (leaf off)",side=3,line=-1,outer=F)
-  #text("c", x= xRange[1], y = yRange[2])
-  
-dev.off()
-
 
 #### Figures 5 and 6 are in GEDI_analyzeData.R #### 
 #### Figure S2. Point cloud plot: drone lidar, leaf-on vs leaf-off ####
