@@ -560,12 +560,11 @@ library("terra")
 
 #### Figure 2. Point cloud plot: four discrete return platforms, leaf-on ####
      
-jpeg(filename = "Results/PointCloudPlot.jpeg",
-     width = 1800, height = 1200, units = "px", pointsize = 36,
-     quality = 300)
+tiff(filename = "Results/Figure2.tiff",
+     width = 4080, height = 2720, units = "px", pointsize = 72)
 
   par(mfrow=c(2,2), oma=c(4,4,1,1), las=1, mar=c(1,1,1,0))
-  ptCex <- 0.05      
+  ptCex <- 0.1      
   
     #ALS      
       data <- readLAS(alsFile)   
@@ -634,7 +633,7 @@ jpeg(filename = "Results/PointCloudPlot.jpeg",
 dev.off()  
   
   
-#### Figure 3. Rasterized metric plots ####
+#### Figure 4. Rasterized metric plots ####
 
 densRange <- range(values(densRast_als),
                    values(densRast_drone),
@@ -645,19 +644,22 @@ paiRange <- range(values(paiRast_als),
                   values(paiRast_drone),
                   values(paiRast_mls),
                   values(paiRast_tls))
-paiBreaks <- c(0,1e-8,0.25,0.5,1:5,paiRange[2])
-cexLab <- 1.4
-cexLetter <- 2
+paiBreaks <- c(0,1e-8,0.5,1,2,4,6,8,10,paiRange[2])
+cexLab <- 0.9
+cexLetter <- 1.2
+cexAxis <- 1.2
+rastMar <- c(1, 1, 1, 1)
 
-jpeg(filename = "Results/VoxelMetricsPlotUpdated.jpeg",
-     width = 2400, height = 3000, units = "px", pointsize = 36,
-     quality = 300)
 
-par(mfrow=c(4,2),las=1, mar=c(2,2,1,1), oma=c(4,4,10,1), xpd=T)
+pdf(file = "Results/Figure4.pdf",
+     width = 4.33, height = 6, pointsize = 12)
+
+par(mfrow=c(4,2),las=1, mar=c(0,0,0,0), oma=c(4,4,6,0), xpd=T)
 
 terra::plot(densRast_als,
             breaks= densBreaks,
             col = c("white",viridisLite::plasma(length(densBreaks)-2)),
+            mar = rastMar,
             decreasing=F,
             box=F,
             las=1,
@@ -666,21 +668,27 @@ terra::plot(densRast_als,
 axis(side=1, at=seq(0,80,5), pos=0,
      labels=F)
 axis(side=2, at=seq(0,45,5), pos=0,
-     labels=T)
-legend(x = -10, y = 60, bty="n",
+     labels=F)
+axis(side=2, at=seq(0,45,20), pos=0,
+     labels=T, cex.axis = cexAxis)
+
+legend(x = 0, y = 82, bty="n",
        c("0", "< 1", "1 - 10", "10 - 20","20 - 40","40 - 80",
          "80 - 160","160 - 320","320 - 640","640 - 1,000","1,000 - 10,000", "> 10,000"),
-       x.intersp = 0.2,
+       x.intersp = 0.4,y.intersp = 1,text.width = 30,
        fill = c("white",viridisLite::plasma(length(densBreaks)-2)),
-       xpd=NA,ncol=4,
-       cex=1.5)
-mtext("Point density (points/m3)",side=3,line=8,outer=F, cex = cexLab)
-mtext("ALS",side=2,line=1,outer=F, las=0)
-text("a", x = 2.5, y = 42.5, cex = cexLetter)
+       pt.cex = 1.2, pt.lwd = 0.5,
+       xpd=NA,ncol=2,
+       cex=1)
+
+mtext("Point density (points/m3)",side=3,line=4.5,outer=F, cex = 0.7)
+mtext("ALS",side=2,line=1,outer=F, las=0, cex = cexLab)
+text("a", x = 5, y = 42.5, cex = cexLetter)
 
 terra::plot(paiRast_als,
             breaks= paiBreaks,
             col = c("white",viridisLite::viridis(length(paiBreaks)-2)),
+            mar = rastMar,
             decreasing=F,
             box=F,
             las=1,
@@ -690,19 +698,22 @@ axis(side=1, at=seq(0,80,5), pos=0,
      labels=F)
 axis(side=2, at=seq(0,45,5), pos=0,
      labels=F)
-legend(x = 0, y = 60, bty="n",
-       c("0", "< 0.25", "0.25 - 0.5", "0.5 - 1","1 - 2","2 - 3",
-         "3 - 4","4 - 5",">5"),
-       x.intersp = 0.2,
+legend(x = 0, y = 82, bty="n",
+       c("0", "< 0.5", "0.5 - 1", "1 - 2","2 - 4","4 - 6",
+         "6 - 8","8 - 10","> 10"),
+       x.intersp = 0.4,y.intersp = 1,text.width = 30,
        fill = c("white",viridisLite::viridis(length(paiBreaks)-2)),
-       xpd=NA,ncol=4,
-       cex=1.5)
-mtext("Effective PAI (m2/m2)",side=3,line=8,outer=F, cex = cexLab)
-text("b", x = 2.5, y = 42.5, cex = cexLetter)
+       pt.cex = 1.2, pt.lwd = 0.5,
+       xpd=NA,ncol=2,
+       cex=1)
+
+mtext("Effective PAI (m2/m2)",side=3,line=4.5,outer=F, cex = 0.7)
+text("b", x = 5, y = 42.5, cex = cexLetter)
 
 terra::plot(densRast_drone,
             breaks= densBreaks,
             col = c("white",viridisLite::plasma(length(densBreaks)-2)),
+            mar = rastMar,
             decreasing=F,
             box=F,
             las=1,
@@ -711,13 +722,17 @@ terra::plot(densRast_drone,
 axis(side=1, at=seq(0,80,5), pos=0,
      labels=F)
 axis(side=2, at=seq(0,45,5), pos=0,
-     labels=T)
-mtext("ULS",side=2,line=1,outer=F, las=0)
-text("c", x = 2.5, y = 42.5, cex = cexLetter)
+     labels=F)
+axis(side=2, at=seq(0,45,20), pos=0,
+     labels=T, cex.axis = cexAxis)
+
+mtext("ULS",side=2,line=1,outer=F, las=0, cex = cexLab)
+text("c", x = 5, y = 42.5, cex = cexLetter)
 
 terra::plot(paiRast_drone,
             breaks= paiBreaks,
             col = c("white",viridisLite::viridis(length(paiBreaks)-2)),
+            mar = rastMar,
             decreasing=F,
             box=F,
             las=1,
@@ -727,11 +742,12 @@ axis(side=1, at=seq(0,80,5), pos=0,
      labels=F)
 axis(side=2, at=seq(0,45,5), pos=0,
      labels=F)
-text("d", x = 2.5, y = 42.5, cex = cexLetter)
+text("d", x = 5, y = 42.5, cex = cexLetter)
 
 terra::plot(densRast_mls,
             breaks= densBreaks,
             col = c("white",viridisLite::plasma(length(densBreaks)-2)),
+            mar = rastMar,
             decreasing=F,
             box=F,
             las=1,
@@ -740,13 +756,16 @@ terra::plot(densRast_mls,
 axis(side=1, at=seq(0,80,5), pos=0,
      labels=F)
 axis(side=2, at=seq(0,45,5), pos=0,
-     labels=T)
-mtext("MLS",side=2,line=1,outer=F, las=0)
-text("e", x = 2.5, y = 42.5, cex = cexLetter)
+     labels=F)
+axis(side=2, at=seq(0,45,20), pos=0,
+     labels=T, cex.axis = cexAxis)
+mtext("MLS",side=2,line=1,outer=F, las=0, cex = cexLab)
+text("e", x = 5, y = 42.5, cex = cexLetter)
 
 terra::plot(paiRast_mls,
             breaks= paiBreaks,
             col = c("white",viridisLite::viridis(length(paiBreaks)-2)),
+            mar = rastMar,
             decreasing=F,
             box=F,
             las=1,
@@ -756,42 +775,50 @@ axis(side=1, at=seq(0,80,5), pos=0,
      labels=F)
 axis(side=2, at=seq(0,45,5), pos=0,
      labels=F)
-text("f", x = 2.5, y = 42.5, cex = cexLetter)
+text("f", x = 5, y = 42.5, cex = cexLetter)
 
 terra::plot(densRast_tls,
             breaks= densBreaks,
             col = c("white",viridisLite::plasma(length(densBreaks)-2)),
+            mar = rastMar,
             decreasing=F,
             box=F,
             las=1,
             axes=F,
             legend=F)
 axis(side=1, at=seq(0,80,5), pos=0,
-     labels=T)
+     labels=F)
 axis(side=2, at=seq(0,45,5), pos=0,
-     labels=T)
-mtext("TLS",side=2,line=1,outer=F, las=0)
-text("g", x = 2.5, y = 42.5, cex = cexLetter)
+     labels=F)
+axis(side=1, at=seq(0,80,20), pos=0,
+     labels=T, cex.axis = cexAxis)
+axis(side=2, at=seq(0,45,20), pos=0,
+     labels=T, cex.axis = cexAxis)
+mtext("TLS",side=2,line=1,outer=F, las=0, cex = cexLab)
+text("g", x = 5, y = 42.5, cex = cexLetter)
 
 terra::plot(paiRast_tls,
             breaks= paiBreaks,
             col = c("white",viridisLite::viridis(length(paiBreaks)-2)),
+            mar = rastMar,
             decreasing=F,
             box=F,
             las=1,
             axes=F,
             legend=F)
 axis(side=1, at=seq(0,80,5), pos=0,
-     labels=T)
+     labels=F)
 axis(side=2, at=seq(0,45,5), pos=0,
      labels=F)
-mtext("Ground distance (m)",side=1,line=1,outer=T, cex = cexLab)
-mtext("Height (m)",side=2,line=1,outer=T,las=0, cex = cexLab)
-text("h", x = 2.5, y = 42.5, cex = cexLetter)
+axis(side=1, at=seq(0,80,20), pos=0,
+     labels=T, cex.axis = cexAxis)
+mtext("Ground distance (m)",side=1,line=2,outer=T, cex = cexLab)
+mtext("Height (m)",side=2,line=2,outer=T,las=0, cex = cexLab)
+text("h", x = 5, y = 42.5, cex = cexLetter)
 
 dev.off()  
 
-#### Figure 4. Point cloud plot: trunk cross section ####
+#### Figure 5. Point cloud plot: trunk cross section ####
 
 # These point clouds were manually subsetted in CloudCompare and saved as
 # separate .laz files for ease of plotting
@@ -806,11 +833,10 @@ xRange <- c(364623.6,364624.7)
 yRange <- c(4305790.9,4305791.6)
 ptCex <- 0.4
 
-jpeg(filename = "Results/TrunkPlot.jpeg",
-     width = 1200, height = 500, units = "px", pointsize = 36,
-     quality = 300)
+pdf(file = "Results/Figure5.pdf",
+     width = 6.81, height = 2.3, pointsize = 12)
 
-  par(mfrow=c(1,3), mar=c(1,1,1,1),oma=c(2,2,2,2))
+  par(mfrow=c(1,3), mar=c(0,0,0,0),oma=c(2,2,2,2))
   
   plot(x = trunkTLS$X[trunkTLS$Z>zMin & trunkTLS$Z<zMax],
        y = trunkTLS$Y[trunkTLS$Z>zMin & trunkTLS$Z<zMax],
@@ -825,9 +851,9 @@ jpeg(filename = "Results/TrunkPlot.jpeg",
   #text("a", x= xRange[1], y = yRange[2])
   
   lines(x=c(364623.6,364623.8),
-        y=c(4305790.9,4305790.9),
+        y=c(4305790.88,4305790.88),
         lwd=2)
-  text(" 20 cm", x=364623.6,y=4305790.95, adj=0)
+  text(" 20 cm", x=364623.6,y=4305790.95, adj=0, cex=1.4)
 
   plot(x = trunkMLS$X[trunkMLS$Z>zMin & trunkMLS$Z<zMax],
        y = trunkMLS$Y[trunkMLS$Z>zMin & trunkMLS$Z<zMax],
@@ -864,7 +890,7 @@ jpeg(filename = "Results/DroneLeafOnOffComparison.jpeg",
      quality = 300)
 
 par(mfrow=c(1,2), oma=c(2,2,1,1), las=1, mar=c(1,1,1,0))
-ptCex <- 0.05      
+ptCex <- 0.1      
 
 #Drone: leaf on   
 data <- readLAS(droneFile)   
