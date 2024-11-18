@@ -540,7 +540,7 @@ library("terra")
       transectSummary$canopyRugosity[5] <- round(sd(aggregate(ePAI_tls$ePAI, by=list(ePAI_tls$X), FUN="sd")[,2]),2)
       transectSummary$meanLAI[5] <- round(mean(aggregate(ePAI_tls$ePAI, by=list(ePAI_tls$X), FUN="sum")[,2]),2)
       
-      write.csv(transectSummary,"Results/transectSummaryStatsUpdated.csv",row.names = F)
+      write.csv(transectSummary,"Results/transectSummaryStats.csv",row.names = F)
       
       
       transectSummary$canopyRugosity <- as.numeric(transectSummary$canopyRugosity)
@@ -885,7 +885,7 @@ dev.off()
 #### Figures 5 and 6 are in GEDI_analyzeData.R #### 
 #### Figure S2. Point cloud plot: drone lidar, leaf-on vs leaf-off ####
 
-jpeg(filename = "Results/DroneLeafOnOffComparison.jpeg",
+jpeg(filename = "Results/FigureS2.jpeg",
      width = 1800, height = 750, units = "px", pointsize = 36,
      quality = 300)
 

@@ -44,7 +44,7 @@ library(terra); library(lidR); library(sf); library(rGEDI)
   }
   
   
-#### Figure 5. plot of data availability ####
+#### Figure 6. plot of data availability ####
   
   # turn GEDI data frame into spatial object
   data2aSp <- vect(data2a, geom=c("lon_lowestmode", "lat_lowestmode"), crs="epsg:4326", keepgeom=FALSE)
@@ -59,18 +59,18 @@ library(terra); library(lidR); library(sf); library(rGEDI)
   labCex=0.8
 
 # First, make a plot for the whole SERC NEON site  
-jpeg(filename = "Results/GEDI_sercSite.jpeg",
-     width = 1100, height = 1200, units = "px", pointsize = 36,
-     quality = 300)
+pdf(file = "Results/Figure6.pdf",
+     width = 4.33, height = 4.5, pointsize = 12)
   par(mfrow=c(2,2),las=1,mar=c(0,0,0,0),oma=c(2,2,1,1))
   plot(data2aSp,
+       plg=list(digits=2),
        mar=c(1,1,1,1),
        pax=list(lab=2),
        pch=20,
        cex=0.3,
        las=1,
        col=adjustcolor("black",0.2))
-  mtext("a. All data", side=3, outer=F, cex = mainCex, line=-1.5)
+  mtext("a. All data", side=3, outer=F, cex = mainCex, line=-1)
   plot(data2aSp[data2aSp$quality_flag==1,],
        mar=c(1,1,1,1),
        pax=list(lab=0),
@@ -78,7 +78,7 @@ jpeg(filename = "Results/GEDI_sercSite.jpeg",
        cex=0.3,
        las=1,
        col=adjustcolor("black",0.2))
-  mtext("b. Good quality data", side=3, outer=F, cex = mainCex, line=-1.5)
+  mtext("b. Good quality data", side=3, outer=F, cex = mainCex, line=-1)
   plot(data2aSp[data2aSp$quality_flag==1 & data2a$leaf_off_flag=="00",],
        mar=c(1,1,1,1),
        pax=list(lab=1:2),
@@ -86,7 +86,7 @@ jpeg(filename = "Results/GEDI_sercSite.jpeg",
        cex=0.3,
        las=1,
        col=adjustcolor("black",0.2))
-  mtext("c. Good quality leaf on data", side=3, outer=F, cex = mainCex, line=-1.5)
+  mtext("c. Good quality leaf on data", side=3, outer=F, cex = mainCex, line=-1)
   
   plot(data2aSp[data2aSp$quality_flag==1 & data2a$leaf_off_flag=="00" & data2a$year=="2021",],
        mar=c(1,1,1,1),
@@ -95,7 +95,7 @@ jpeg(filename = "Results/GEDI_sercSite.jpeg",
        cex=0.3,
        las=1,
        col=adjustcolor("black",0.2))
-  mtext("d. 2021 Good quality leaf on data", side=3, outer=F, cex = mainCex, line=-1.5)
+  mtext("d. 2021 Good quality leaf on data", side=3, outer=F, cex = mainCex, line=-1)
   mtext("Latitude (deg)", side=2, outer=T, cex = labCex, las=0, line=1)
   mtext("Longitude (deg)", side=1, outer=T, cex = labCex, line=0)
   
@@ -108,7 +108,7 @@ dev.off()
   data_ha4_utmPoly <- buffer(data_ha4_utm,width=12.5)
   data_ha4_utmPoly_good <- data_ha4_utmPoly[data_ha4_utmPoly$quality_flag==1 & data_ha4_utmPoly$leaf_off_flag=="00" & data_ha4_utmPoly$year=="2021",]
   
-jpeg(filename = "Results/GEDI_ha4.jpeg",
+jpeg(filename = "Results/FigureS3.jpeg",
      width = 1100, height = 500, units = "px", pointsize = 36,
      quality = 300)
   par(mfrow=c(1,2),las=1,mar=c(0,0,0,0),oma=c(2,2,0,0))
@@ -180,13 +180,12 @@ data1B_elevation <- data1B_shot@dt$elevation
 # get min and max Z values from drone lidar
 droneShot <- readLAS("Data/GEDI/GEDI_example1.laz")
 
-lineWidth <- 4
+lineWidth <- 1
 
-jpeg(filename = "Results/GEDI_example.jpeg",
-     width = 1800, height = 1000, units = "px", pointsize = 36,
-     quality = 300)
+pdf(file = "Results/Figure7.pdf",
+     width = 6.81, height = 4, pointsize = 12)
 
-  par(mar=c(3,3,4,1), oma=c(2,3,0,0), mfrow=c(1,3), las=1)
+  par(mar=c(3,3,2,1), oma=c(2,3,0,0), mfrow=c(1,3), las=1)
   
   # First panel: plot wavelength from minimum to maximum values,
   # Scale y-axis to height above ground value
@@ -194,8 +193,9 @@ jpeg(filename = "Results/GEDI_example.jpeg",
        y = data1B_htAboveGround,
        xlab=NA,ylab=NA,
        bty="n",
-       type = "l", lwd=lineWidth)
-  text("a", x = 0, y = 85, cex = 1)
+       type = "l", lwd=lineWidth,
+       cex.axis=1.2)
+  text("a", x = 0, y = 85, cex = 1.3, xpd=NA)
   # Add red lines for drone data min and 98th percentile heights
   abline(h=c(min(droneShot$Z),quantile(droneShot$Z,0.98)),
          lwd=lineWidth+2,col=adjustcolor("red",0.6))
@@ -209,25 +209,28 @@ jpeg(filename = "Results/GEDI_example.jpeg",
        ylim=c(-10,40),
        xlab=NA,ylab=NA,
        bty="n",
-       type = "l",lwd=lineWidth)
-  text("b", x = 0, y = 40, cex = 1)
+       type = "l",lwd=lineWidth,
+       cex.axis=1.2)
+  text("b", x = 0, y = 41.5, cex = 1.3, xpd=NA)
   # Add red lines for drone data min and 98th percentile heights
   abline(h=c(min(droneShot$Z),quantile(droneShot$Z,0.98)),
          lwd=lineWidth+2,col=adjustcolor("red",0.6))
   # Add blue lines from GEDI ground and RH 98 values
   abline(h=c(0,data_ha4_utmPoly_good$rh_98[1]),
          lwd=lineWidth+2, col=adjustcolor("blue",0.6))
-  mtext("Scaled waveform amplitude", side=1, outer=T, cex=1.5)
-  mtext("Height above ground (m)", side=2, outer=T, las=0, cex=1.5, line=0.5)
+  mtext("Scaled waveform amplitude", side=1, outer=T, cex=1, line=0,adj=0.2)
+  mtext("GEDI height above ground (m)", side=2, outer=T, las=0, cex=1, line=0.5)
   
   plot(x=droneShot$X-mean(droneShot$X,na.rm=T),
        y=droneShot$Z-min(droneShot$Z,na.rm=T),
+       ylim=c(-10,40),
        pch=19,
-       cex=0.08,
+       cex=0.06,
        col=adjustcolor("black",0.5),
        axes=F,
-       asp=1)
-  axis(side=2,pos=-14, at=seq(0,40,10))
-  text("c", x = -10, y = 38, cex = 1)
+       asp=1,
+       cex.axis=1.2)
+  axis(side=2,pos=-14, at=seq(0,40,10),cex.axis=1.2)
+  text("c", x = -12, y = 41.5, cex = 1.3, xpd=NA)
   
 dev.off()  
