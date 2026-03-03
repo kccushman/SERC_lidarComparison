@@ -49,3 +49,4 @@ library("lidR")
     tlsTransectCat <- catalog_retile(tlsTransectCat)
     # remove single TLS file
     file.remove("Data/transect/transect_tls.laz")
+    

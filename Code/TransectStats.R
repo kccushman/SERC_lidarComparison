@@ -566,52 +566,6 @@ tiff(filename = "Results/Figure2.tiff",
   par(mfrow=c(2,2), oma=c(4,4,1,1), las=1, mar=c(1,1,1,0))
   ptCex <- 0.1      
   
-    #ALS      
-      data <- readLAS(alsFile)   
-      dataNorm <- normalize_height(data, dtm)
-      plot(x=dataNorm$X- 364560,y=dataNorm$Z,
-           cex=ptCex,
-           pch=19,
-           col = adjustcolor("black",0.5),
-           ylim=c(0,45),
-           ylab=NA,
-           asp=1,
-           axes=F)
-      mtext("a. ALS",side=3,line=-1,outer=F)
-      #text("a", x = 2.5, y = 45)
-      axis(side=2,at=seq(0,45,5),pos=-1)
-      
-    
-    #Drone   
-    data <- readLAS(droneFile)   
-    dataNorm <- normalize_height(data, dtm)
-    plot(x=dataNorm$X- 364560,y=dataNorm$Z,
-         cex=ptCex,
-         pch=19,
-         col = adjustcolor("black",0.5),
-         ylim=c(0,45),
-         ylab=NA,
-         asp=1,
-         axes=F)
-    mtext("b. ULS",side=3,line=-1,outer=F)
-    #text("b", x = 2.5, y = 45)
-    
-    #MLS   
-    data <- readLAS(mlsFile)   
-    dataNorm <- normalize_height(data, dtm)
-    plot(x=dataNorm$X- 364560,y=dataNorm$Z,
-         cex=ptCex,
-         pch=19,
-         col = adjustcolor("black",0.5),
-         ylim=c(0,45),
-         ylab=NA,
-         asp=1,
-         axes=F)
-    mtext("c. MLS",side=3,line=-1,outer=F)
-    #text("c", x = 2.5, y = 45)
-    axis(side=2,at=seq(0,45,5),pos=-1)
-    axis(side=1,at=seq(0,80,5),pos=-1)
-    
     #TLS   
     data <- readLAS(tlsCat)   
     dataNorm <- normalize_height(data, dtm)
@@ -623,8 +577,49 @@ tiff(filename = "Results/Figure2.tiff",
          ylab=NA,
          asp=1,
          axes=F)
-    mtext("d. TLS",side=3,line=-1,outer=F)
-    #text("d", x = 2.5, y = 45)
+    mtext("a. TLS",side=3,line=-1,outer=F)
+    axis(side=2,at=seq(0,45,5),pos=-1)
+
+    #MLS   
+    data <- readLAS(mlsFile)   
+    dataNorm <- normalize_height(data, dtm)
+    plot(x=dataNorm$X- 364560,y=dataNorm$Z,
+         cex=ptCex,
+         pch=19,
+         col = adjustcolor("black",0.5),
+         ylim=c(0,45),
+         ylab=NA,
+         asp=1,
+         axes=F)
+    mtext("b. MLS",side=3,line=-1,outer=F)
+    
+    #ULS (drone)   
+    data <- readLAS(droneFile)   
+    dataNorm <- normalize_height(data, dtm)
+    plot(x=dataNorm$X- 364560,y=dataNorm$Z,
+         cex=ptCex,
+         pch=19,
+         col = adjustcolor("black",0.5),
+         ylim=c(0,45),
+         ylab=NA,
+         asp=1,
+         axes=F)
+    mtext("c. ULS",side=3,line=-1,outer=F)
+    axis(side=1,at=seq(0,80,5),pos=-1)
+    axis(side=2,at=seq(0,45,5),pos=-1)
+
+   #ALS      
+    data <- readLAS(alsFile)   
+    dataNorm <- normalize_height(data, dtm)
+    plot(x=dataNorm$X- 364560,y=dataNorm$Z,
+         cex=ptCex,
+         pch=19,
+         col = adjustcolor("black",0.5),
+         ylim=c(0,45),
+         ylab=NA,
+         asp=1,
+         axes=F)
+    mtext("d. ALS",side=3,line=-1,outer=F)
     axis(side=1,at=seq(0,80,5),pos=-1)
     
     mtext("Ground distance (m)",side=1,line=1,outer=T)

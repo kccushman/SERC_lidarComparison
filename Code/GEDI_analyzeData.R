@@ -183,54 +183,56 @@ droneShot <- readLAS("Data/GEDI/GEDI_example1.laz")
 lineWidth <- 1
 
 pdf(file = "Results/Figure7.pdf",
-     width = 6.81, height = 4, pointsize = 12)
+     width = 6, height = 3.5, pointsize = 12)
 
-  par(mar=c(3,3,2,1), oma=c(2,3,0,0), mfrow=c(1,3), las=1)
+  par(mar=c(1,1,1,0), oma=c(3,3,1,0), mfrow=c(1,2), las=1)
   
-  # First panel: plot wavelength from minimum to maximum values,
-  # Scale y-axis to height above ground value
-  plot(x = data1B_amplitudeScaled,
-       y = data1B_htAboveGround,
-       xlab=NA,ylab=NA,
-       bty="n",
-       type = "l", lwd=lineWidth,
-       cex.axis=1.2)
-  text("a", x = 0, y = 85, cex = 1.3, xpd=NA)
-  # Add red lines for drone data min and 98th percentile heights
-  abline(h=c(min(droneShot$Z),quantile(droneShot$Z,0.98)),
-         lwd=lineWidth+2,col=adjustcolor("red",0.6))
-  # Add blue lines from GEDI ground and RH 98 values
-  abline(h=c(0,data_ha4_utmPoly_good$rh_98[1]),
-         lwd=lineWidth+2, col=adjustcolor("blue",0.6))
+  # # First panel: plot wavelength from minimum to maximum values,
+  # # Scale y-axis to height above ground value
+  # plot(x = data1B_amplitudeScaled,
+  #      y = data1B_htAboveGround,
+  #      xlab=NA,ylab=NA,
+  #      bty="n",
+  #      type = "l", lwd=lineWidth,
+  #      cex.axis=1.2)
+  # text("a", x = 0, y = 85, cex = 1.3, xpd=NA)
+  # # Add red lines for drone data min and 98th percentile heights
+  # abline(h=c(min(droneShot$Z),quantile(droneShot$Z,0.98)),
+  #        lwd=lineWidth+2,col=adjustcolor("red",0.6))
+  # # Add blue lines from GEDI ground and RH 98 values
+  # abline(h=c(0,data_ha4_utmPoly_good$rh_98[1]),
+  #        lwd=lineWidth+2, col=adjustcolor("blue",0.6))
   
   # Second panel: zoom in closer to min and max heights to better see waveform
   plot(x = data1B_amplitudeScaled,
        y = data1B_htAboveGround,
-       ylim=c(-10,40),
+       ylim=c(-16,50),
        xlab=NA,ylab=NA,
        bty="n",
        type = "l",lwd=lineWidth,
-       cex.axis=1.2)
-  text("b", x = 0, y = 41.5, cex = 1.3, xpd=NA)
+       cex.axis=1.1)
+  text("a", x = 0, y = 53, cex = 1, xpd=NA)
   # Add red lines for drone data min and 98th percentile heights
-  abline(h=c(min(droneShot$Z),quantile(droneShot$Z,0.98)),
-         lwd=lineWidth+2,col=adjustcolor("red",0.6))
+  # abline(h=c(min(droneShot$Z),quantile(droneShot$Z,0.98)),
+  #        lwd=lineWidth+2,col=adjustcolor("red",0.6))
   # Add blue lines from GEDI ground and RH 98 values
   abline(h=c(0,data_ha4_utmPoly_good$rh_98[1]),
          lwd=lineWidth+2, col=adjustcolor("blue",0.6))
-  mtext("Scaled waveform amplitude", side=1, outer=T, cex=1, line=0,adj=0.2)
-  mtext("GEDI height above ground (m)", side=2, outer=T, las=0, cex=1, line=0.5)
+  mtext("GEDI waveform data", side=1, outer=F, cex=1, line=2)
+  mtext("Height above ground (m)", side=2, outer=T, las=0, cex=1, line=2)
   
   plot(x=droneShot$X-mean(droneShot$X,na.rm=T),
        y=droneShot$Z-min(droneShot$Z,na.rm=T),
-       ylim=c(-10,40),
-       pch=19,
-       cex=0.06,
-       col=adjustcolor("black",0.5),
+       ylim=c(0,40),
+       pch=16,
+       cex=0.15,
+       col=adjustcolor("black",0.35),
        axes=F,
        asp=1,
-       cex.axis=1.2)
+       cex.axis=1.1)
   axis(side=2,pos=-14, at=seq(0,40,10),cex.axis=1.2)
-  text("c", x = -12, y = 41.5, cex = 1.3, xpd=NA)
+  text("b", x = -12, y = 42, cex = 1, xpd=NA)
+  mtext("Footprint ULS data", side=1, outer=F, cex=1, line=2)
+
   
 dev.off()  
