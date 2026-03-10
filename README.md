@@ -19,6 +19,10 @@ To facilitate visualization and comparison of discrete return lidar clouds, we c
 - "transect" ALS, ULS, MLS, and TLS files are included for the 80 x 5 m transect within the SERC plot ha 4. The subsetting is performed in Code/SubsetClouds.R
 - "trunk" manually subsetted cross-section of a single tree trunk in TLS, MLS, and ULS (leaf off) data
 
+### NOTE: if accessing code from GitHub, full datasets can be downloaded from ORNL 
+### Constellation via the following DOI: 10.13139/ORNLNCCS/2477966
+### (Some data are on GitHub but large files are not)
+
 ## Code folder
 - GEDI_openData.R : convert GEDI .h5 files (as originally downloaded) to summarized .csv files of metrics needed for analysis
 - GEDI_analyzeData.R : analyze summarized GEDI .csv files to produce results and figures for the manuscript
