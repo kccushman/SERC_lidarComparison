@@ -1,10 +1,22 @@
-# Subset a common "slice" from all point clouds
+## SubsetClouds.R
+## KC Cushman
+## For: "A primer on forest structure measurement with lidar for ecologists"
 
-library("lidR")
+## This script reads in lidar data from the SERC ForestGEO plot (ha 4) and
+## subsets a common transect "slice" from all point clouds.
 
-# NOTE: before running this section, download ha 4 data from the following Google Drive link:
-# https://drive.google.com/drive/folders/1zTAWz94pnOWlbFfPlgONtNq5IFj58dgW?usp=sharing
-# and unzip the "TLS" folder
+## NOTE: if accessing code from GitHub, full datasets can be downloaded from ORNL 
+## Constellation via the following DOI: 10.13139/ORNLNCCS/2477966
+## (Some data are on GitHub but large files are not)
+
+#### Packages ####
+
+library("lidR") # Version 4.2.1 used
+
+#### Setup ####
+
+  # Before running code below, set working directory to whatever folder contains
+  # the "Data" folder
 
 # Define file path for MLS, ALS, and uls lidar files
   mlsFile <- "Data/ha4_data/mls_ha4.laz"
@@ -20,12 +32,13 @@ library("lidR")
   ulsOffCat <- catalog(ulsOffFile)
   tlsCat <- catalog(tlsFile)
 
-# Define transect ends and width (in m)
+#### Define transect ends and width (in m) ####
+  
   transectP1 <- c(364560,4305790)
   transectP2 <- c(364640,4305790)
   transectWidth <- 5
 
-# Subset point clouds
+#### Subset and save transect point clouds ####
   mlsSub <-   clip_transect(mlsCat, p1 = transectP1, p2 = transectP2, width = transectWidth)
   writeLAS(mlsSub,"Data/transect/transect_mls.laz")
   

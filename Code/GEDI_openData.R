@@ -1,11 +1,22 @@
-library(rhdf5)
-library(bit64)
-library(sp)
-library(terra)
+## GEDI_openData.R
+## KC Cushman
+## For: "A primer on forest structure measurement with lidar for ecologists"
 
-# NOTE: before running this section, download all folders from the following Google Drive link:
-# https://drive.google.com/drive/folders/11y4RBRfPJSHqWiekDEiomRX5UlqNJeF0?usp=sharing
-# Keep organization in "GEDI01_B", "GEDI02_A", "GEDI02_B"
+## This script reads in raw GEDI data (hdf5 format), extracts relevant information
+## for this analysis, and writes that .
+
+## NOTE: if accessing code from GitHub, full datasets can be downloaded from ORNL 
+## Constellation via the following DOI: 10.13139/ORNLNCCS/2477966
+## (Some data are on GitHub but large files are not)
+
+#### Packages ####
+
+library(rhdf5) # NOTE: this package can be installed with BiocManager::install("rhdf5"); # Version 2.54.1 used
+library(bit64) # Version 4.6.0
+library(terra) # Version 1.8.70 used
+
+# Before running code below, set working directory to whatever folder contains
+# the "Data" folder
 
 #### Get 2_A data ####
 files <- unlist(list.files(path="Data/GEDI/GEDI02_A", pattern="h5", recursive=T, full.names=T))
@@ -14,7 +25,7 @@ temp_i <- vector("list", length(files))
 
 for (i in 1:length(files)){
 
-   year <- as.integer(substr(files[i],42,45))
+   year <- as.integer(substr(files[i],50,53))
   
    temp <- h5ls(files[i])
    temp <- temp[which(temp$dim != "1"),]
@@ -99,7 +110,7 @@ temp_i <- vector("list", length(files))
 
 for (i in 1:length(files)){
   
-   year <- as.integer(substr(files[i],42,45))
+   year <- as.integer(substr(files[i],50,53))
   
    temp <- h5ls(files[i])
    temp <- temp[which(temp$dim != "1"),]
@@ -182,13 +193,13 @@ write.csv(temp_i, "Data/GEDI/data_GEDI2_B.csv", row.names = F)
 write.csv(temp_i$shot_number, "Data/GEDI/data_GEDI2_B_shot_number.csv", row.names = F)
 
 #### Get 1_B data (only pulls useful metadata) ####
-files <- unlist(list.files(path="Data/GEDI//GEDI01_B", pattern="h5", recursive=T, full.names=T))
+files <- unlist(list.files(path="Data/GEDI/GEDI01_B", pattern="h5", recursive=T, full.names=T))
 
 temp_i <- vector("list", length(files))
 
 for (i in 1:length(files)){
   
-  year <- as.integer(substr(files[i],42,45))
+  year <- as.integer(substr(files[i],50,53))
   
   temp <- h5ls(files[i])
   temp <- temp[which(temp$dim != "1"),]
