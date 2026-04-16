@@ -1,7 +1,7 @@
 # KC Cushman
 # Supplemental data and code for: "A primer on forest structure measurement with lidar for ecologists"
 
-This repository includes data and code accompanying the case study included in the manuscript "Multi-scale forest ecological inference from lidar platform" (submitted to _Ecology Letters_). We compiled lidar datasets from multiple platforms in a common area to:
+This repository includes data and code accompanying the case study included in the manuscript. We compiled lidar datasets from multiple platforms in a common area to:
 
 1.	Demonstrate how differences in sensor characteristics influence density and resolution of lidar data.
 2.	Provide open-source, co-located datasets for users to further inspect differences in lidar data.
@@ -32,5 +32,6 @@ Contains data-based figures are results produced from the included Data and Code
 ## Other resources
 In addition to the R code included here, we encourage readers to vizualize point clouds in 3D using CloudeCompare, a free and open source software: https://cloudcompare-org.danielgm.net/ 
 
-Manuscript authors: K.C. Cushman (MLS data), Angelica M. Almeyda Zambrano (ULS data), Eben N. Broadbent (ULS data), Kamil Král (TLS data), Martin Krůček (TLS data), Sean M. McMahon (SERC plot PI). Data analysis and visualization by KCC
+Manuscript authors: K.C. Cushman, Kamil Král, Angelica M. Almeyda Zambrano, Eben N. Broadbent, Martin Krůček, Alice Rosen, and Sean M. McMahon (SERC plot PI).
+Data analysis and visualization by KCC
 Contact: cushmankc@ornl.gov
